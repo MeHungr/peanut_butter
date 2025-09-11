@@ -7,19 +7,20 @@ import (
 
 // Agent represents a single registered agent in the C2
 type Agent struct {
-	ID       string    `json:"agent_id"`
-	OS       string    `json:"os,omitempty"`
-	Arch     string    `json:"arch,omitempty"`
-	Hostname string    `json:"hostname,omitempty"`
-	Status   string      `json:"status,omitempty"`
+	ID       string     `json:"agent_id"`
+	OS       string     `json:"os,omitempty"`
+	Arch     string     `json:"arch,omitempty"`
+	Hostname string     `json:"hostname,omitempty"`
+	Status   string     `json:"status,omitempty"`
 	LastSeen *time.Time `json:"last_seen,omitempty"`
 }
 
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
-	ID        string    `json:"id"`
-	Type      string    `json:"type"`
-	Payload   string    `json:"payload,omitempty"`
+	ID        string     `json:"id"`
+	Type      string     `json:"type"`
+	Completed bool       `json:"completed,omitempty"`
+	Payload   string     `json:"payload,omitempty"`
 	Timestamp *time.Time `json:"timestamp,omitempty"`
 }
 
@@ -27,6 +28,5 @@ type Task struct {
 type Result struct {
 	TaskID  string `json:"task_id"`
 	AgentID string `json:"agent_id"`
-	Status  string `json:"status"`
 	Output  string `json:"output"`
 }
