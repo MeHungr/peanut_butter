@@ -10,7 +10,8 @@ type Agent struct {
 	ID       string     `json:"agent_id"`
 	OS       string     `json:"os,omitempty"`
 	Arch     string     `json:"arch,omitempty"`
-	IP       string     `json:"ip,omitempty"`
+	AgentIP  string     `json:"agent_ip,omitempty"`
+	ServerIP string     `json:"server_ip,omitempty"`
 	Hostname string     `json:"hostname,omitempty"`
 	Status   string     `json:"status,omitempty"`
 	LastSeen *time.Time `json:"last_seen,omitempty"`
