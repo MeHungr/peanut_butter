@@ -75,6 +75,16 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Checks that the agent id exists
+	if _, ok := agents[agent.ID]; !ok {
+		http.Error(w, "Invalid agent ID", http.StatusBadRequest)
+		return
+	}
+
+	// Updates LastSeen
+	now := time.Now()
+	agents[agent.ID].LastSeen = &now
+
 	// Look up tasks for this agent
 	agentTasks, ok := tasks[agent.ID]
 	if !ok || len(agentTasks) == 0 {
@@ -137,6 +147,12 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	// Validates that the task ID is non-empty
 	if result.TaskID == "" {
 		http.Error(w, "No task ID", http.StatusBadRequest)
+		return
+	}
+
+	// Checks that the agent id exists
+	if _, ok := agents[result.AgentID]; !ok {
+		http.Error(w, "Invalid agent ID", http.StatusBadRequest)
 		return
 	}
 
