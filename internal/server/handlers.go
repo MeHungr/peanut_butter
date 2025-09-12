@@ -178,7 +178,7 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	taskToUpdate.Completed = true
 
 	// Prints to the console the task being completed
-	fmt.Printf("Agent %s completed task: %s\n", agents[result.AgentID].ID, result.TaskID)
+	fmt.Printf("Agent %s completed task: %s\n\n Return Code: %d, Output:\n%s", agents[result.AgentID].ID, result.TaskID, result.ReturnCode, result.Output)
 
 	w.WriteHeader(http.StatusOK)
 }

@@ -166,11 +166,14 @@ func Start() {
 		Client: &http.Client{Timeout: 10 * time.Second},
 	}
 
+	fmt.Printf("Agent starting with ID: %s\n", agent.ID)
+
 	// Attempt to register with the server until successful
 	for {
 		err := agent.Register()
 		if err != nil {
 			fmt.Println(err)
+			time.Sleep(5 * time.Second)
 			continue
 		}
 		break
@@ -188,7 +191,9 @@ func Start() {
 			if err != nil {
 				fmt.Println(err)
 			}
-			agent.SendResult(result)
+			if err := agent.SendResult(result); err != nil {
+				fmt.Println(err)
+			}
 		}
 
 		time.Sleep(agent.CallbackInterval)
