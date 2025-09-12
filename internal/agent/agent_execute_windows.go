@@ -39,7 +39,7 @@ func executeCommand(task *api.Task) (output string, returnCode int) {
 
 	// Check if the context timed out
 	if task.Timeout != nil && ctx.Err() == context.DeadlineExceeded {
-		output += "\n\nCommand timed out!"
+		output += "\nCommand timed out!"
 		returnCode = ExitTimeout
 		return
 	}
