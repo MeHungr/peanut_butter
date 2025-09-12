@@ -10,7 +10,6 @@ type Agent struct {
 	ID               string        `json:"agent_id"`
 	OS               string        `json:"os,omitempty"`
 	Arch             string        `json:"arch,omitempty"`
-	AgentIP          string        `json:"agent_ip,omitempty"`
 	ServerIP         string        `json:"server_ip,omitempty"`
 	ServerPort       int           `json:"server_port,omitempty"`
 	CallbackInterval time.Duration `json:"callback_interval,omitempty"`

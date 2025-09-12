@@ -17,12 +17,24 @@ var (
 
 // Start starts the server and starts listening on the specified port
 func Start() {
+
+	// --------------------------------
+	// AGENT ENDPOINTS
+	// --------------------------------
 	// Defines the /register path and uses RegisterHandler to handle data
 	http.HandleFunc("/register", RegisterHandler)
 	// Defines the /task path and uses TaskHandler to handle data
 	http.HandleFunc("/task", TaskHandler)
 	// Defines the /result path and uses ResultHandler to handle data
 	http.HandleFunc("/result", ResultHandler)
+
+	// --------------------------------
+	// CLI ENDPOINTS
+	// --------------------------------
+	// These all require localhost and must be ran on the server host
+
+	// Defines the /get-agents path and returns a list of connected agents
+	http.HandleFunc("/get-agents", requireLocalhost(GetAgentsHandler))
 
 	// TEMP
 	http.HandleFunc("/enqueue", EnqueueHandler)

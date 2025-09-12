@@ -4,12 +4,24 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 )
+
+func requireLocalhost(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		host, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil || (host != "127.0.0.1" && host != "::1") {
+			http.Error(w, "Forbidden", http.StatusForbidden)
+			return
+		}
+		next(w, r)
+	}
+}
 
 // RegisterHandler handles the registration of an agent to the server
 // The /register endpoint expects an agent_id in a POST request
@@ -181,6 +193,28 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("\nAgent %s completed task: %s\n\n Return Code: %d, Output:\n%s", agents[result.AgentID].ID, result.TaskID, result.ReturnCode, result.Output)
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// GetAgentsHandler returns the list of connected agents
+func GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
+	// Ensures GET method is used
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Initializes a slice of agent copies and adds agents from the agents map
+	var agentList []api.Agent
+	for _, agent := range agents {
+		agentList = append(agentList, *agent)
+	}
+
+	// Encodes JSON and sends message
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(agentList); err != nil {
+		http.Error(w, "Failed to encode agents", http.StatusInternalServerError)
+		return
+	}
 }
 
 // EnqueueHandler adds a task for a specific agent
