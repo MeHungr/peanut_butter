@@ -1,4 +1,3 @@
 # Welcome!
 
-This will hopefully be a C2 written in Go eventually.
-For now, it's just a generic set of directories.
+At the moment, this has a server and an agent, but has no cli and possible race conditions.
