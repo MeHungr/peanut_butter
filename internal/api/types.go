@@ -20,7 +20,8 @@ type Agent struct {
 
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
-	ID        string         `json:"id"`
+	TaskID        string         `json:"id"`
+	AgentID   string         `json:"agent_id"`
 	Type      string         `json:"type"`
 	Completed bool           `json:"completed,omitempty"`
 	Payload   string         `json:"payload,omitempty"`
@@ -30,8 +31,7 @@ type Task struct {
 
 // Result represents the result of a completed task, returned by an agent
 type Result struct {
-	TaskID     string `json:"task_id"`
-	AgentID    string `json:"agent_id"`
+	Task   `json:"task"`
 	Output     string `json:"output"`
 	ReturnCode int    `json:"return_code"`
 }

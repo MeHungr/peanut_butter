@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -14,8 +15,9 @@ import (
 
 // listAgents reaches out to the /get-agents endpoint and prints connected agents
 func listAgents(client *http.Client) error {
+	url := "http://localhost:8080/get-agents"
 	// Sends a GET request to the /get-agents endpoint and handles errors
-	resp, err := client.Get("http://localhost:8080/get-agents")
+	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("Failed to send GET request: %w", err)
 	}
@@ -30,6 +32,36 @@ func listAgents(client *http.Client) error {
 	// Prints out each agent and last seen time
 	for _, a := range agents {
 		fmt.Printf("%s - Last seen: %s\n", a.ID, a.LastSeen.Format(time.RFC3339))
+	}
+
+	return nil
+}
+
+func enqueueCommand(client *http.Client, cmd string) error {
+	url := "http://localhost:8080/enqueue"
+	// Define the task
+	task := api.Task{
+		Type: "command",
+		AgentID: "temp",
+		Completed: false,
+		Payload: cmd,
+	}
+
+	// Marshal into JSON
+	taskJSON, err := json.Marshal(task)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal JSON: %w", err)
+	}
+
+	// POST the JSON payload
+resp, err := client.Post(url, "application/json", bytes.NewBuffer(taskJSON))
+	if err != nil {
+		return fmt.Errorf("Failed to send POST request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		
 	}
 
 	return nil
@@ -53,12 +85,15 @@ func Run() {
 			return
 		}
 		input := strings.TrimSpace(scanner.Text())
+		tokens := strings.Fields(input)
+		cmd := tokens[0]
 
-		switch input {
+		switch cmd {
 		case "agents":
 			if err := listAgents(client); err != nil {
 				fmt.Println("Error:", err)
 			}
+		case "command":
 		case "quit", "exit":
 			fmt.Println("Exiting CLI")
 			return
