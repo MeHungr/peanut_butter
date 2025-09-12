@@ -12,4 +12,6 @@
 - [ ] Obfuscation
 
 ## Quality of Life
+- [ ] More task types
 - [ ] Web UI??
+- [ ] Logging!!

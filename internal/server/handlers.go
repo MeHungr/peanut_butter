@@ -12,6 +12,7 @@ import (
 )
 
 // RegisterHandler handles the registration of an agent to the server
+// The /register endpoint expects an agent_id in a POST request
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST. This is the only allowed method
 	if r.Method != http.MethodPost {
@@ -55,6 +56,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // TaskHandler handles the distribution of tasks to agents
+// The /task endpoint expects an agent_id in a POST request
 func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST
 	if r.Method != http.MethodPost {
