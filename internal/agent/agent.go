@@ -21,7 +21,7 @@ type Agent struct {
 	*http.Client
 }
 
-func getLocalIP() string {
+func GetLocalIP() string {
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		return "?.?.?.?"
@@ -155,17 +155,7 @@ func (agent *Agent) SendResult(result *api.Result) error {
 	return nil
 }
 
-func Start() {
-	agent := Agent{
-		Agent: api.Agent{
-			ID:         getLocalIP(),
-			ServerIP:   "localhost",
-			ServerPort: 8080,
-			CallbackInterval: 10 * time.Second,
-		},
-		Client: &http.Client{Timeout: 10 * time.Second},
-	}
-
+func (agent *Agent) Start() {
 	fmt.Printf("Agent starting with ID: %s\n", agent.ID)
 
 	// Attempt to register with the server until successful
