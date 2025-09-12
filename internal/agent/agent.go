@@ -7,22 +7,24 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/MeHungr/peanut-butter/internal/api"
 )
 
-type Agent struct {
-	AgentID          string        `json:"agent_id"`
+type ClientAgent struct {
+	api.Agent
 	ServerIP         string        `json:"server_ip"`
 	ServerPort       int           `json:"server_port"`
 	CallbackInterval time.Duration `json:"callback_interval,omitempty"`
 }
 
 // Register allows the agent to register with the server
-func (agent *Agent) Register() error {
+func (agent *ClientAgent) Register() error {
 	url := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 
 	// Marshals the agent id into JSON
 	body, err := json.Marshal(map[string]string{
-		"agent_id": agent.AgentID,
+		"agent_id": agent.ID,
 	})
 	if err != nil {
 		return fmt.Errorf("Failed to marshal JSON: %w", err)
@@ -38,7 +40,7 @@ func (agent *Agent) Register() error {
 	// Read the body of the response into a variable
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("Failed to read response:", err)
+		return fmt.Errorf("Failed to read response: %w", err)
 	}
 	//Check response code and handle errors
 	if resp.StatusCode == http.StatusOK {
@@ -52,9 +54,9 @@ func (agent *Agent) Register() error {
 }
 
 func Start() {
-	agent := Agent{
-		AgentID: "1",
-		ServerIP: "localhost",
+	agent := ClientAgent{
+		Agent: api.Agent{ID: "1"},
+		ServerIP:   "localhost",
 		ServerPort: 8080,
 	}
 	agent.Register()
