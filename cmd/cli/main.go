@@ -1,7 +1,9 @@
 package main
 
-import "github.com/MeHungr/peanut-butter/internal/cli"
+import (
+	"github.com/MeHungr/peanut-butter/cmd/cli/commands"
+)
 
 func main() {
-	cli.Run()
+	commands.Execute()
 }

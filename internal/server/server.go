@@ -9,10 +9,8 @@ import (
 )
 
 var (
-	// agents is a package level map that maps agent ids to agents
-	agents = make(map[string]*api.Agent)
-	// tasks is a package level map that maps agent ids to the agent's tasks
-	tasks = make(map[string][]*api.Task)
+	agents = make(map[string]*api.Agent)  // package level map that maps agent ids to agents
+	tasks  = make(map[string][]*api.Task) // package level map that maps agent ids to the agent's tasks
 )
 
 // Start starts the server and starts listening on the specified port
@@ -35,9 +33,12 @@ func Start() {
 
 	// Defines the /get-agents path and returns a list of connected agents
 	http.HandleFunc("/get-agents", requireLocalhost(GetAgentsHandler))
-
-	// TEMP
-	http.HandleFunc("/enqueue", EnqueueHandler)
+	// Defines the /enqueue path and enqueues tasks to list of targeted agents
+	http.HandleFunc("/enqueue", requireLocalhost(EnqueueHandler))
+	// Defines the /add-targets path and allows targeting of agents
+	http.HandleFunc("/add-targets", requireLocalhost(AddTargetsHandler))
+	// Defines the /get-targets path and returns a list of targeted agents
+	http.HandleFunc("/get-targets", requireLocalhost(GetTargetsHandler))
 
 	// Starts the server
 	err := http.ListenAndServe(":8080", nil)

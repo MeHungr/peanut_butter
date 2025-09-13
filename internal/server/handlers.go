@@ -191,7 +191,7 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	taskToUpdate.Completed = true
 
 	// Prints to the console the task being completed
-	fmt.Printf("\nAgent %s completed task: '%s'\n\n Return Code: %d, Output:\n%s", agents[result.AgentID].ID, result.Payload, result.ReturnCode, result.Output)
+	fmt.Printf("\nAgent %s completed task: \"%s\"\n\n Return Code: %d, Output:\n%s", agents[result.AgentID].ID, result.Payload, result.ReturnCode, result.Output)
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -205,9 +205,9 @@ func GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Initializes a slice of agent copies and adds agents from the agents map
-	var agentList []api.Agent
+	var agentList api.GetAgentsResponse
 	for _, agent := range agents {
-		agentList = append(agentList, *agent)
+		agentList.AgentIDs = append(agentList.AgentIDs, agent)
 	}
 
 	// Encodes JSON and sends message
@@ -216,6 +216,63 @@ func GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode agents", http.StatusInternalServerError)
 		return
 	}
+}
+
+// AddTargetsHandler allows the cli to add targets to task enqueueing
+func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
+
+	// Decode JSON into slice of agent ids in AddTargetsRequest
+	var reqBody api.AddTargetsRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Mark the requested agents as targeted
+	for _, id := range reqBody.AgentIDs {
+		if agent, ok := agents[id]; ok {
+			agent.Targeted = true
+		}
+	}
+
+	// Response message
+	msg := api.Message{
+		Message: "Targets added",
+	}
+
+	// Send response
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(msg)
+}
+
+func GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Iterate through agents and append targeted agents to targeted
+	var targeted []*api.Agent
+	for _, agent := range agents {
+		if agent.Targeted {
+			targeted = append(targeted, agent)
+		}
+	}
+
+	resp := api.GetTargetsResponse{
+		Agents: targeted,
+		Count:  len(targeted),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 // EnqueueHandler allows enqueueing of tasks
@@ -271,8 +328,8 @@ func EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	// Message JSON format
-	msg := map[string]string{
-		"message": "Task enqueued",
+	msg := api.Message{
+		Message: "Task enqueued",
 	}
 
 	// Marshal and send JSON

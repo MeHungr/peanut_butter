@@ -7,9 +7,11 @@ import (
 
 // Agent represents a single registered agent in the C2
 type Agent struct {
-	ID               string        `json:"agent_id"`
-	OS               string        `json:"os,omitempty"`
-	Arch             string        `json:"arch,omitempty"`
+	ID       string `json:"agent_id"`
+	OS       string `json:"os,omitempty"`
+	Arch     string `json:"arch,omitempty"`
+	Targeted bool   `json:"targeted,omitempty"`
+	// AgentIP          string        `json:"agent_ip,omitempty"`
 	ServerIP         string        `json:"server_ip,omitempty"`
 	ServerPort       int           `json:"server_port,omitempty"`
 	CallbackInterval time.Duration `json:"callback_interval,omitempty"`
@@ -20,7 +22,7 @@ type Agent struct {
 
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
-	TaskID        string         `json:"id"`
+	TaskID    string         `json:"id"`
 	AgentID   string         `json:"agent_id"`
 	Type      string         `json:"type"`
 	Completed bool           `json:"completed,omitempty"`
@@ -31,7 +33,28 @@ type Task struct {
 
 // Result represents the result of a completed task, returned by an agent
 type Result struct {
-	Task   `json:"task"`
+	Task       `json:"task"`
 	Output     string `json:"output"`
 	ReturnCode int    `json:"return_code"`
+}
+
+// GetAgentsResponse represents the response from the server on the /get-agents endpoint
+type GetAgentsResponse struct {
+	AgentIDs []*Agent `json:"agents"`
+}
+
+// AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
+type AddTargetsRequest struct {
+	AgentIDs []string `json:"agents"`
+}
+
+// GetTargetsResponse represents the response from the server on the /get-targets endpoint
+type GetTargetsResponse struct {
+	Agents []*Agent `json:"agents"`
+	Count  int      `json:"count"`
+}
+
+// Message represents a json message sent by the server
+type Message struct {
+	Message string `json:"message"`
 }

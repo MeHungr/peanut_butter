@@ -111,9 +111,9 @@ func (agent *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
 	}
 
 	// Declares the result and its agent id
-	result := &api.Result{}
-	result.AgentID = agent.ID
-	result.TaskID = task.ID
+	result := &api.Result{
+		Task: *task,
+	}
 
 	switch task.Type {
 	case "command":
