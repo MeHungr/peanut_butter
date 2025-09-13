@@ -85,7 +85,7 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 // TaskHandler handles the distribution of tasks to agents
 // The /task endpoint expects an agent_id in a POST request
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -105,44 +105,29 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Checks that the agent id exists
-	if _, ok := agents[agent.ID]; !ok {
+	storageAgent, err := srv.storage.GetAgentByID(agent.ID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	if storageAgent == nil {
 		http.Error(w, "Invalid agent ID", http.StatusBadRequest)
 		return
 	}
 
-	// Updates LastSeen
-	now := time.Now()
-	agents[agent.ID].LastSeen = &now
+	// TODO: update last_seen in DB
+	// TODO: fetch next pending task from DB
 
-	// Look up tasks for this agent
-	agentTasks, ok := tasks[agent.ID]
-	if !ok || len(agentTasks) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	// Selects the first uncompleted task
-	var agentTask *api.Task
-	for _, task := range agentTasks {
-		if task.Completed == false {
-			agentTask = task
-			break
-		}
-	}
-	if agentTask == nil {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
+	w.WriteHeader(http.StatusNoContent) // TEMP
 
 	// Return first task as json
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(*agentTask); err != nil {
-		http.Error(w, "Internal error", http.StatusInternalServerError)
-		return
-	}
-	agentTask = nil
+	// w.Header().Set("Content-Type", "application/json")
+	// w.WriteHeader(http.StatusOK)
+	// if err := json.NewEncoder(w).Encode(*agentTask); err != nil {
+	// 	http.Error(w, "Internal error", http.StatusInternalServerError)
+	// 	return
+	// }
+	// agentTask = nil
 }
 
 // ResultHandler allows sending the results from the agent to the server

@@ -1,9 +1,12 @@
 package storage
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 
+	"github.com/MeHungr/peanut-butter/internal/agent"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -12,6 +15,7 @@ type Storage struct {
 	DB *sqlx.DB
 }
 
+// NewStorage creates a new Storage that contains a DB
 func NewStorage(path string) (*Storage, error) {
 	// Open a connection to the DB
 	db, err := sqlx.Open("sqlite3", path)
@@ -38,6 +42,7 @@ func NewStorage(path string) (*Storage, error) {
 	return storage, nil
 }
 
+// initSchema initializes the db with proper tables
 func (s *Storage) initSchema() error {
 	schema := `
 CREATE TABLE IF NOT EXISTS agents (
@@ -78,7 +83,9 @@ CREATE TABLE IF NOT EXISTS results (
 	return err
 }
 
+// RegisterAgent handles registering an agent in the db
 func (s *Storage) RegisterAgent(agent Agent) error {
+	// Query for the db
 	query := `
 INSERT INTO agents (agent_id, os, arch, targeted, agent_ip, server_ip, server_port, callback_interval, hostname, status, last_seen)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -94,6 +101,7 @@ ON CONFLICT(agent_id) DO UPDATE SET
     status = excluded.status,
     last_seen = excluded.last_seen;
 `
+	// Execute the query and replace ? with each variable
 	if _, err := s.DB.Exec(query,
 		agent.ID, agent.OS, agent.Arch, agent.Targeted,
 		agent.AgentIP, agent.ServerIP, agent.ServerPort,
@@ -104,4 +112,27 @@ ON CONFLICT(agent_id) DO UPDATE SET
 	}
 
 	return nil
+}
+
+// GetAgentByID retrieves the agent with the ID passed in as an argument
+func (s *Storage) GetAgentByID(agentID string) (*Agent, error) {
+	// Query for the db
+	query := `
+SELECT * FROM agents WHERE agent_id = ?;
+`
+
+	// Initialize agent struct
+	var agent Agent
+	// Query the db for the matching agent
+	if err := s.DB.Get(&agent, query, agentID); err != nil {
+		// If no agent is found, return nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		// Other errors get reported
+		return nil, fmt.Errorf("GetAgentByID: %w", err)
+	}
+
+	// Return the pointer to the agent
+	return &agent, nil
 }
