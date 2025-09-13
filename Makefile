@@ -1,5 +1,4 @@
 BINARY_DIR := ./bin
-DIST_DIR := ./dist
 GO := go
 
 PKG_SERVER := ./cmd/server
@@ -11,14 +10,14 @@ LDFLAGS := -s -w
 
 # Default build type (dev)
 .PHONY: all
-	all: build
+all: release
 
 # DEV builds (keeps debug info)
-.PHONY: build
-	build: build-server build-agent build-cli
+.PHONY: dev
+dev: clean build-server build-agent build-cli
 
 .PHONY: build-server
-	build-server:
+build-server:
 	@mkdir -p $(BINARY_DIR)
 	$(GO) build -o $(BINARY_DIR)/server $(PKG_SERVER)
 
@@ -36,12 +35,12 @@ build-cli:
 PLATFORMS := linux/amd64 linux/arm64 darwin/amd64 windows/amd64
 
 .PHONY: release
-release: clean-dist
+release: clean
 	@echo "Building release (VERSION=$(VERSION))..."
-	@mkdir -p $(DIST_DIR)
+	@mkdir -p $(BINARY_DIR)
 	@for platform in $(PLATFORMS); do \
 	    os=$${platform%/*}; arch=$${platform#*/}; \
-	    outdir=$(DIST_DIR)/$${os}_$${arch}; mkdir -p $$outdir; \
+	    outdir=$(BINARY_DIR)/$${os}_$${arch}; mkdir -p $$outdir; \
 	    echo "Building server for $$platform..."; \
 	    env GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/server $(PKG_SERVER); \
 	    echo "Building agent for $$platform..."; \
@@ -49,9 +48,9 @@ release: clean-dist
 	    echo "Building cli for $$platform..."; \
 	    env GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbctl $(PKG_CLI); \
 	done
-	@echo "Release builds done. Dist dir: $(DIST_DIR)"
+	@echo "Release builds done. Dist dir: $(BINARY_DIR)"
 
-.PHONY: clean-dist
-clean-dist:
-	-rm -rf $(DIST_DIR)
-	-mkdir -p $(DIST_DIR)
+.PHONY: clean
+clean:
+	-rm -rf $(BINARY_DIR)
+	-mkdir -p $(BINARY_DIR)
