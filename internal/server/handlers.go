@@ -3,6 +3,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
 func requireLocalhost(next http.HandlerFunc) http.HandlerFunc {
@@ -440,60 +442,61 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task := &api.Task{}
-	// Decode the JSON into a task, error if fail
-	if err := json.NewDecoder(r.Body).Decode(task); err != nil {
+	var req api.EnqueueRequest
+	// Decode the JSON into an api.EnqueueRequest
+	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
 		http.Error(w, "Invalid task", http.StatusUnsupportedMediaType)
 		return
 	}
 
-	// Ensures the request included an agent_id
-	if task.AgentID == "" {
-		http.Error(w, "agent_id required", http.StatusBadRequest)
-		return
-	}
-
-	// Ensure the task is valid
-	if strings.TrimSpace(task.Payload) == "" {
-		http.Error(w, "Task payload required", http.StatusBadRequest)
-		return
-	}
-
-	// Make sure the agent exists
-	if _, err := srv.storage.GetAgentByID(task.AgentID); err != nil {
-		http.Error(w, "Agent does not exist", http.StatusBadRequest)
-		return
-	}
-
-	// Timestamp the task
-	now := time.Now().UTC()
-	task.Timestamp = &now
-
-	// Convert api.Task to storage.Task
-	storageTask := apiToStorageTask(task)
-
-	// Enqueue the task
-	if err := srv.storage.InsertTask(storageTask); err != nil {
-		log.Printf("Failed to insert task %d: %v", task.TaskID, err)
+	// Get all targeted agents
+	targets, err := srv.storage.GetTargets()
+	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
+	}
+
+	// Enqueue a task for each targeted agent
+	count := 0
+	for _, a := range targets {
+		// Timestamp for the task
+		now := time.Now().UTC()
+
+		// Create the task
+		task := storage.Task{
+			AgentID:   a.ID,
+			Type:      req.Type,
+			Completed: false,
+			Payload:   req.Payload,
+			Timestamp: &now,
+		}
+		// Only include timeout if > 0
+		if req.Timeout > 0 {
+			dur := time.Duration(req.Timeout) * time.Second
+			task.Timeout = &dur
+		}
+		// Attempt to insert the task into the db
+		if err := srv.storage.InsertTask(&task); err != nil {
+			log.Printf("Failed to insert task for agent %s: %v", a.ID, err)
+			continue
+		}
+		count++
+	}
+
+	// Message JSON format
+	msg := api.Message{
+		Message: fmt.Sprintf("Enqueued %d tasks", count),
 	}
 
 	// Set content type and send 200 status code
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-
-	// Message JSON format
-	msg := api.Message{
-		Message: "Task enqueued",
-	}
-
 	// Marshal and send JSON
 	if err := json.NewEncoder(w).Encode(msg); err != nil {
-		http.Error(w, "Failed to encode JSON", http.StatusInternalServerError)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
 
 	// Log to server
-	log.Printf("Enqueued task for agent %s: %s\n", task.AgentID, task.Payload)
+	log.Printf("Enqueued %d tasks:\nPayload:%s", count, req.Payload)
 }

@@ -63,6 +63,13 @@ type GetTargetsResponse struct {
 	Count  int      `json:"count"`
 }
 
+// EnqueueRequest represents a request to enqueue a task on the /enqueue endpoint
+type EnqueueRequest struct {
+	Type    TaskType `json:"type"`
+	Payload string   `json:"payload"`
+	Timeout int      `json:"timeout,omitempty"` // seconds
+}
+
 // Message represents a json message sent by the server
 type Message struct {
 	Message string `json:"message"`

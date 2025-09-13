@@ -32,7 +32,7 @@ func getAgents(client *http.Client) ([]*api.Agent, error) {
 	}
 
 	// Returns the list of agents
-	return agents.AgentIDs, nil
+	return agents.Agents, nil
 
 }
 
@@ -56,59 +56,39 @@ func ListAgents(client *http.Client) error {
 func EnqueueCommand(client *http.Client, cmd string, timeoutSeconds int) error {
 	url := "http://localhost:8080/enqueue"
 
-	// Converts seconds to a duration
-	timeoutDuration := time.Duration(timeoutSeconds) * time.Second
+	req := api.EnqueueRequest{
+		Type:    api.Command,
+		Payload: cmd,
+		Timeout: timeoutSeconds,
+	}
 
-	// Retrieve agents from the server
-	agents, err := getAgents(client)
+	// Marshal into JSON
+	taskJSON, err := json.Marshal(req)
 	if err != nil {
-		fmt.Println(err)
+		return fmt.Errorf("Failed to marshal JSON: %w", err)
 	}
 
-	// Iterate through agents and only send tasks to targeted agents
-	for _, agent := range agents {
-		if agent.Targeted {
-			// Define the task
-			task := api.Task{
-				Type:      api.Command,
-				AgentID:   agent.ID,
-				Completed: false,
-				Payload:   cmd,
-			}
-
-			// Timeout greater than 0 will be added to the task
-			if timeoutSeconds > 0 {
-				task.Timeout = &timeoutDuration
-			}
-
-			// Marshal into JSON
-			taskJSON, err := json.Marshal(task)
-			if err != nil {
-				return fmt.Errorf("Failed to marshal JSON: %w", err)
-			}
-
-			// POST the JSON payload
-			resp, err := client.Post(url, "application/json", bytes.NewBuffer(taskJSON))
-			if err != nil {
-				return fmt.Errorf("Failed to send POST request: %w", err)
-			}
-			defer resp.Body.Close()
-
-			respBody, _ := io.ReadAll(resp.Body)
-			// Checks the status code and reports errors
-			if resp.StatusCode != http.StatusCreated {
-				return fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
-			}
-
-			// If the status is 201 Created, prints the message
-			var msg api.Message
-			if err := json.Unmarshal(respBody, &msg); err != nil {
-				return fmt.Errorf("Failed to unmarshal JSON: %w", err)
-			}
-
-			fmt.Println(msg.Message)
-		}
+	// POST the JSON payload
+	resp, err := client.Post(url, "application/json", bytes.NewBuffer(taskJSON))
+	if err != nil {
+		return fmt.Errorf("Failed to send POST request: %w", err)
 	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	// Checks the status code and reports errors
+	if resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+
+	// If the status is 201 Created, prints the message
+	var msg api.Message
+	if err := json.Unmarshal(respBody, &msg); err != nil {
+		return fmt.Errorf("Failed to unmarshal JSON: %w", err)
+	}
+
+	fmt.Println(msg.Message)
+
 	return nil
 }
 
