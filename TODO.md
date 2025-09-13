@@ -1,11 +1,11 @@
 # TODOs
 
 ## Core
-- [ ] Finish basic implementation
+- [x] Finish basic implementation
 - [ ] Implement DB
+- [ ] Add /results endpoint
 - [ ] Disallow duplicate tasks and agents
 - [ ] Agent authentication
-- [ ] Allow multiple agents at once
 
 ## Security
 - [ ] Encryption
