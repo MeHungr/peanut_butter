@@ -59,6 +59,8 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	agent.LastSeen = &now
 
+	log.Printf("Registering agent with ID: %q", agent.ID)
+
 	// Convert the api.Agent to a storage.Agent
 	storageAgent := apiToStorageAgent(agent)
 	// Attempt to register the agent with the db
@@ -78,7 +80,7 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("Agent: %s has registered\n", agent.ID)
+	log.Printf("Agent: %s has registered\n", agent.ID)
 }
 
 // TaskHandler handles the distribution of tasks to agents

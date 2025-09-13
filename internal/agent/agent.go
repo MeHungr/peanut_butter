@@ -35,8 +35,24 @@ func GetLocalIP() string {
 	return "?.?.?.?"
 }
 
+func (a *Agent) ToAPI() api.Agent {
+	return api.Agent{
+		ID:               a.ID,
+		OS:               a.OS,
+		Arch:             a.Arch,
+		AgentIP:          a.AgentIP,
+		ServerIP:         a.ServerIP,
+		ServerPort:       a.ServerPort,
+		CallbackInterval: a.CallbackInterval,
+		Hostname:         a.Hostname,
+		Status:           a.Status,
+		LastSeen:         a.LastSeen,
+	}
+}
+
 // Register allows the agent to register with the server
-func (agent *Agent) Register() error {
+func (a *Agent) Register() error {
+	agent := a.ToAPI()
 	url := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 
 	// Marshals the agent's id into JSON
@@ -46,7 +62,7 @@ func (agent *Agent) Register() error {
 	}
 
 	// POST request with the agent's id as the body
-	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
+	resp, err := a.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return fmt.Errorf("Failed to send POST request: %w", err)
 	}
