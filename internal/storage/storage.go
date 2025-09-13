@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"time"
 
-	"github.com/MeHungr/peanut-butter/internal/agent"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS results (
 	agent_id TEXT NOT NULL,
 	output TEXT,
 	return_code INTEGER,
+	UNIQUE (task_id, agent_id),
 	FOREIGN KEY (task_id) REFERENCES tasks(task_id),
 	FOREIGN KEY (agent_id) REFERENCES agents(agent_id)
 );
@@ -84,7 +85,7 @@ CREATE TABLE IF NOT EXISTS results (
 }
 
 // RegisterAgent handles registering an agent in the db
-func (s *Storage) RegisterAgent(agent Agent) error {
+func (s *Storage) RegisterAgent(agent *Agent) error {
 	// Query for the db
 	query := `
 INSERT INTO agents (agent_id, os, arch, targeted, agent_ip, server_ip, server_port, callback_interval, hostname, status, last_seen)
@@ -117,9 +118,7 @@ ON CONFLICT(agent_id) DO UPDATE SET
 // GetAgentByID retrieves the agent with the ID passed in as an argument
 func (s *Storage) GetAgentByID(agentID string) (*Agent, error) {
 	// Query for the db
-	query := `
-SELECT * FROM agents WHERE agent_id = ?;
-`
+	query := `SELECT * FROM agents WHERE agent_id = ?`
 
 	// Initialize agent struct
 	var agent Agent
@@ -135,4 +134,103 @@ SELECT * FROM agents WHERE agent_id = ?;
 
 	// Return the pointer to the agent
 	return &agent, nil
+}
+
+// UpdateLastSeen updates the last seen time of an agent to the provided time
+func (s *Storage) UpdateLastSeen(agentID string, t time.Time) error {
+	// Query for the db
+	query := `UPDATE agents SET last_seen = WHERE agent_id = ?`
+
+	// Execute the query
+	if _, err := s.DB.Exec(query, t, agentID); err != nil {
+		return fmt.Errorf("UpdateLastSeen: %w", err)
+	}
+	return nil
+}
+
+// GetNextTask returns the next task for the agent with agentID
+func (s *Storage) GetNextTask(agentID string) (*Task, error) {
+	// Query for the db
+	query := `
+SELECT * FROM tasks
+WHERE agent_id = ? AND completed = 0
+ORDER BY timestamp ASC
+LIMIT 1
+`
+
+	// Initialize the new task
+	var task Task
+	// Query the db
+	if err := s.DB.Get(&task, query, agentID); err != nil {
+		// If no task is found, return nil
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		// Other errors get reported
+		return nil, fmt.Errorf("GetNextTask: %w", err)
+	}
+
+	// Return the pointer to the task
+	return &task, nil
+}
+
+// MarkTaskCompleted marks the task given by taskID as completed
+func (s *Storage) MarkTaskCompleted(taskID int) error {
+	// Query for the db
+	query := `UPDATE tasks SET completed = 1 WHERE task_id = ?`
+
+	// Update the task
+	if _, err := s.DB.Exec(query, taskID); err != nil {
+		return fmt.Errorf("MarkTaskCompleted: %w", err)
+	}
+
+	// No errors
+	return nil
+}
+
+// InsertResult inserts a result into the db
+func (s *Storage) InsertResult(r *Result) error {
+	// Query for the db
+	query := `
+INSERT OR IGNORE INTO results (task_id, agent_id, output, return_code)
+VALUES (?, ?, ?, ?)
+`
+
+	// Insert the result
+	res, err := s.DB.Exec(query, r.TaskID, r.AgentID, r.Output, r.ReturnCode)
+	if err != nil {
+		return fmt.Errorf("InsertResult: %w", err)
+	}
+
+	// Detect duplicate results and log them
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("InsertResult: failed to get RowsAffected: %w", err)
+	}
+	if rows == 0 {
+		log.Printf("Duplicate result ignored: agent=%s task=%d", r.AgentID, r.TaskID)
+	}
+
+	// Update the result struct's id to be the auto incremented one
+	id, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("InsertResult: failed to get LastInsertId: %w", err)
+	}
+	r.ResultID = int(id)
+
+	return nil
+}
+
+// GetAllAgents returns a slice of all agents registered with the db
+func (s *Storage) GetAllAgents() ([]Agent, error) {
+	// Query for the db
+	query := `SELECT * FROM agents`
+
+	// Create slice of Agents and query the db to fill it
+	var agents []Agent
+	if err := s.DB.Select(&agents, query); err != nil {
+		return nil, fmt.Errorf("GetAllAgents: %w", err)
+	}
+
+	return agents, nil
 }

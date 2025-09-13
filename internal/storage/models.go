@@ -35,7 +35,7 @@ type Task struct {
 // Result represents the result of a completed task, returned by an agent
 type Result struct {
 	ResultID   int    `db:"result_id"`
-	TaskID     string `db:"task_id"`
+	TaskID     int    `db:"task_id"`
 	AgentID    string `db:"agent_id"`
 	Output     string `db:"output"`
 	ReturnCode int    `db:"return_code"`

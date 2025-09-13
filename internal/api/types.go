@@ -49,7 +49,7 @@ type Result struct {
 
 // GetAgentsResponse represents the response from the server on the /get-agents endpoint
 type GetAgentsResponse struct {
-	AgentIDs []*Agent `json:"agents"`
+	Agents []*Agent `json:"agents"`
 }
 
 // AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
