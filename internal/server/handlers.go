@@ -3,7 +3,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -59,13 +58,13 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	agent.LastSeen = &now
 
-	log.Printf("Registering agent with ID: %q", agent.ID)
+	log.Printf("Registering agent with ID: %q\n", agent.ID)
 
 	// Convert the api.Agent to a storage.Agent
 	storageAgent := apiToStorageAgent(&agent)
 	// Attempt to register the agent with the db
 	if err := srv.storage.RegisterAgent(storageAgent); err != nil {
-		log.Printf("RegisterAgent failed for %s: %v", agent.ID, err)
+		log.Printf("RegisterAgent failed for %s: %v\n", agent.ID, err)
 		http.Error(w, "Failed to register agent", http.StatusInternalServerError)
 		return
 	}
@@ -121,13 +120,13 @@ func (srv *Server) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Update agent's last seen time to now
 	now := time.Now().UTC()
 	if err := srv.storage.UpdateLastSeen(agent.ID, now); err != nil {
-		log.Printf("Failed to update last_seen for %s: %v", agent.ID, err)
+		log.Printf("Failed to update last_seen for %s: %v\n", agent.ID, err)
 	}
 
 	// Retrieves the next task from the db
 	task, err := srv.storage.GetNextTask(agent.ID)
 	if err != nil {
-		log.Printf("GetNextTask failed for %s: %v", agent.ID, err)
+		log.Printf("GetNextTask failed for %s: %v\n", agent.ID, err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -197,21 +196,21 @@ func (srv *Server) ResultHandler(w http.ResponseWriter, r *http.Request) {
 	// Updates the agent's last seen time
 	now := time.Now().UTC()
 	if err := srv.storage.UpdateLastSeen(result.AgentID, now); err != nil {
-		log.Printf("Failed to update last_seen for %s: %v", result.AgentID, err)
+		log.Printf("Failed to update last_seen for %s: %v\n", result.AgentID, err)
 	}
 
 	// Convert api.Result to a storage.Result
 	storageResult := apiToStorageResult(&result)
 	// Insert the result into the db
 	if err := srv.storage.InsertResult(storageResult); err != nil {
-		log.Printf("Failed to insert result for task %d: %v", result.TaskID, err)
+		log.Printf("Failed to insert result for task %d: %v\n", result.TaskID, err)
 		http.Error(w, "Failed to store result", http.StatusInternalServerError)
 		return
 	}
 
 	// Mark the corresponding task as completed
 	if err := srv.storage.MarkTaskCompleted(result.TaskID); err != nil {
-		log.Printf("Failed to mark task as completed for task %d: %v", result.TaskID, err)
+		log.Printf("Failed to mark task as completed for task %d: %v\n", result.TaskID, err)
 		http.Error(w, "Failed to mark task as completed", http.StatusInternalServerError)
 		return
 	}
@@ -245,12 +244,14 @@ func (srv *Server) GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Queries database for all agents
 	agents, err := srv.storage.GetAllAgents()
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
-	// Initializes a slice of agent copies and adds agents from the agents map
+
+	// Converts storage.Agents to api.Agents and adds them to response body
 	var resp api.GetAgentsResponse
 	for _, a := range agents {
 		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
@@ -265,7 +266,7 @@ func (srv *Server) GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // AddTargetsHandler allows the cli to add targets to task enqueueing
-func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -280,11 +281,10 @@ func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Mark the requested agents as targeted
-	for _, id := range reqBody.AgentIDs {
-		if agent, ok := agents[id]; ok {
-			agent.Targeted = true
-		}
+	// Adds the requested agents as targets
+	if err := srv.storage.AddTargets(reqBody.AgentIDs); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
 
 	// Response message
@@ -302,25 +302,26 @@ func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTargetsHandler sends a list of current targets
-func GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow GET
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Iterate through agents and append targeted agents to targeted
-	var targeted []*api.Agent
-	for _, agent := range agents {
-		if agent.Targeted {
-			targeted = append(targeted, agent)
-		}
+	// Query database for targets
+	targets, err := srv.storage.GetTargets()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
 
-	resp := api.GetTargetsResponse{
-		Agents: targeted,
-		Count:  len(targeted),
+	// Convert storage.Agents to api.Agents and add to response body
+	var resp api.GetTargetsResponse
+	for _, t := range targets {
+		resp.Agents = append(resp.Agents, storageToAPIAgent(&t))
 	}
+	resp.Count = len(resp.Agents)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -331,7 +332,7 @@ func GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // UntargetHandler allows agents to be untargeted
-func UntargetHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) UntargetHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -346,11 +347,10 @@ func UntargetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Iterate through the provided agents and set Targeted to false
-	for _, id := range reqBody.AgentIDs {
-		if agent, ok := agents[id]; ok {
-			agent.Targeted = false
-		}
+	// Untarget the provided agents
+	if err := srv.storage.Untarget(reqBody.AgentIDs); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
 
 	// Send a success message
@@ -366,16 +366,17 @@ func UntargetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ClearTargetsHandler allows clearing of the target list
-func ClearTargetsHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) ClearTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow DELETE
 	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Set all agents.Targeted to false
-	for _, agent := range agents {
-		agent.Targeted = false
+	// Clear targets
+	if err := srv.storage.ClearTargets(); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
 
 	msg := api.Message{
@@ -391,7 +392,7 @@ func ClearTargetsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // SetTargetsHandler clears the target list then sets the targets to those provided
-func SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow PUT
 	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -406,16 +407,10 @@ func SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set all agents.Targeted to false
-	for _, agent := range agents {
-		agent.Targeted = false
-	}
-
-	// Set only the given agents
-	for _, id := range reqBody.AgentIDs {
-		if agent, ok := agents[id]; ok {
-			agent.Targeted = true
-		}
+	// Clear then set targets
+	if err := srv.storage.SetTargets(reqBody.AgentIDs); err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
 	}
 
 	msg := api.Message{
@@ -431,7 +426,7 @@ func SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // EnqueueHandler allows enqueueing of tasks
-func EnqueueHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	// Only accepts POST requests
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -465,17 +460,24 @@ func EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Make sure the agent exists
-	if _, ok := agents[task.AgentID]; !ok {
-		http.Error(w, "Agent not found", http.StatusBadRequest)
+	if _, err := srv.storage.GetAgentByID(task.AgentID); err != nil {
+		http.Error(w, "Agent does not exist", http.StatusBadRequest)
 		return
 	}
 
-	// Timestamp the task and assign an id
-	now := time.Now()
+	// Timestamp the task
+	now := time.Now().UTC()
 	task.Timestamp = &now
 
-	// Add the task to the agent's queue
-	tasks[task.AgentID] = append(tasks[task.AgentID], task)
+	// Convert api.Task to storage.Task
+	storageTask := apiToStorageTask(task)
+
+	// Enqueue the task
+	if err := srv.storage.InsertTask(storageTask); err != nil {
+		log.Printf("Failed to insert task %d: %v", task.TaskID, err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
 
 	// Set content type and send 200 status code
 	w.Header().Set("Content-Type", "application/json")
@@ -493,5 +495,5 @@ func EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Log to server
-	fmt.Printf("Enqueued task for agent %s: %s\n", task.AgentID, task.Payload)
+	log.Printf("Enqueued task for agent %s: %s\n", task.AgentID, task.Payload)
 }

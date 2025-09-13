@@ -49,6 +49,18 @@ func storageToAPITask(t *storage.Task) *api.Task {
 	}
 }
 
+func apiToStorageTask(t *api.Task) *storage.Task {
+	return &storage.Task{
+		TaskID:    t.TaskID,
+		AgentID:   t.AgentID,
+		Type:      t.Type,
+		Completed: t.Completed,
+		Payload:   t.Payload,
+		Timeout:   t.Timeout,
+		Timestamp: t.Timestamp,
+	}
+}
+
 func apiToStorageResult(r *api.Result) *storage.Result {
 	return &storage.Result{
 		ResultID:   r.ResultID,

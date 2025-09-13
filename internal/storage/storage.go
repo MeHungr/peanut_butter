@@ -331,3 +331,27 @@ func (s *Storage) SetTargets(agentIDs []string) error {
 	// No errors
 	return nil
 }
+
+func (s *Storage) InsertTask(t *Task) error {
+	// Query for the db
+	query := `
+INSERT INTO tasks (agent_id, type, completed, payload, timeout)
+VALUES (?, ?, ?, ?, ?)
+`
+
+	// Insert the task into the db
+	res, err := s.DB.Exec(query, t.AgentID, t.Type, t.Completed, t.Payload, t.Timeout)
+	if err != nil {
+		return fmt.Errorf("InsertTask: %w", err)
+	}
+
+	// Grab the id from the db and assign it to the struct
+	id, err := res.LastInsertId()
+	if err != nil {
+		return fmt.Errorf("InsertTask: %w", err)
+	}
+	t.TaskID = int(id)
+
+	// No errors
+	return nil
+}
