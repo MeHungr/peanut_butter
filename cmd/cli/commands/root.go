@@ -17,8 +17,7 @@ var rootCmd = &cobra.Command{
 	Long: `pbctl is the command-line interface for managing Peanut Butter C2 agents.
 
 You can list connected agents, enqueue commands for execution, manage targets, 
-and monitor task results. Use subcommands such as 'agents', 'enqueue', 'set-targets',
-and 'console' to interact with the server. 
+and monitor task results. Use subcommands such as 'agents', 'enqueue', and 'targets' to interact with the server. 
 `,
 }
 
@@ -32,5 +31,4 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

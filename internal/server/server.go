@@ -39,6 +39,12 @@ func Start() {
 	http.HandleFunc("/add-targets", requireLocalhost(AddTargetsHandler))
 	// Defines the /get-targets path and returns a list of targeted agents
 	http.HandleFunc("/get-targets", requireLocalhost(GetTargetsHandler))
+	// Defines the /untarget path and untargets the provided agents
+	http.HandleFunc("/untarget", requireLocalhost(UntargetHandler))
+	// Defines the /clear-targets path and clears all targets
+	http.HandleFunc("/clear-targets", requireLocalhost(ClearTargetsHandler))
+	// Defines the /set-targets path and clears targets before adding the provided ones
+	http.HandleFunc("/set-targets", requireLocalhost(SetTargetsHandler))
 
 	// Starts the server
 	err := http.ListenAndServe(":8080", nil)

@@ -124,9 +124,8 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Return first task as json
 	w.Header().Set("Content-Type", "application/json")
-	err := json.NewEncoder(w).Encode(*agentTask)
-	// Throws an error if encoding fails
-	if err != nil {
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(*agentTask); err != nil {
 		http.Error(w, "Internal error", http.StatusInternalServerError)
 		return
 	}
@@ -195,7 +194,17 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	// Prints to the console the task being completed
 	fmt.Printf("\nAgent %s completed task: \"%s\"\n\n Return Code: %d, Output:\n%s", agents[result.AgentID].ID, result.Payload, result.ReturnCode, result.Output)
 
+	msg := api.Message{
+		Message: "Result received",
+	}
+
+	// Send back response
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(&msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // GetAgentsHandler returns the list of connected agents
@@ -215,7 +224,7 @@ func GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 	// Encodes JSON and sends message
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(agentList); err != nil {
-		http.Error(w, "Failed to encode agents", http.StatusInternalServerError)
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
 }
@@ -229,8 +238,8 @@ func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	// Decode JSON into slice of agent ids in AddTargetsRequest
-	var reqBody api.AddTargetsRequest
+	// Decode JSON into slice of agent ids in TargetsRequest
+	var reqBody api.TargetsRequest
 	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
@@ -250,9 +259,14 @@ func AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(msg)
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
+// GetTargetsHandler sends a list of current targets
 func GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Only allow GET
 	if r.Method != http.MethodGet {
@@ -274,7 +288,111 @@ func GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+// UntargetHandler allows agents to be untargeted
+func UntargetHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow POST
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
+
+	// Decode the json into reqBody
+	var reqBody api.TargetsRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Iterate through the provided agents and set Targeted to false
+	for _, id := range reqBody.AgentIDs {
+		if agent, ok := agents[id]; ok {
+			agent.Targeted = false
+		}
+	}
+
+	// Send a success message
+	msg := api.Message{
+		Message: "Targets removed",
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+// ClearTargetsHandler allows clearing of the target list
+func ClearTargetsHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow DELETE
+	if r.Method != http.MethodDelete {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Set all agents.Targeted to false
+	for _, agent := range agents {
+		agent.Targeted = false
+	}
+
+	msg := api.Message{
+		Message: "All targets cleared",
+	}
+	// Send back response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}
+
+// SetTargetsHandler clears the target list then sets the targets to those provided
+func SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow PUT
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
+
+	// Decode the request body
+	var reqBody api.TargetsRequest
+	if err := json.NewDecoder(r.Body).Decode(&reqBody); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	// Set all agents.Targeted to false
+	for _, agent := range agents {
+		agent.Targeted = false
+	}
+
+	// Set only the given agents
+	for _, id := range reqBody.AgentIDs {
+		if agent, ok := agents[id]; ok {
+			agent.Targeted = true
+		}
+	}
+
+	msg := api.Message{
+		Message: "Targets set",
+	}
+	// Send back response
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // EnqueueHandler allows enqueueing of tasks

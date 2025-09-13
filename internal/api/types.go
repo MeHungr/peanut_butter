@@ -50,7 +50,7 @@ type GetAgentsResponse struct {
 }
 
 // AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
-type AddTargetsRequest struct {
+type TargetsRequest struct {
 	AgentIDs []string `json:"agents"`
 }
 
