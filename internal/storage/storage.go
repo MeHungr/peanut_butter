@@ -77,3 +77,31 @@ CREATE TABLE IF NOT EXISTS results (
 	_, err := s.DB.Exec(schema)
 	return err
 }
+
+func (s *Storage) RegisterAgent(agent Agent) error {
+	query := `
+INSERT INTO agents (agent_id, os, arch, targeted, agent_ip, server_ip, server_port, callback_interval, hostname, status, last_seen)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(agent_id) DO UPDATE SET
+    os = excluded.os,
+    arch = excluded.arch,
+    targeted = excluded.targeted,
+    agent_ip = excluded.agent_ip,
+    server_ip = excluded.server_ip,
+    server_port = excluded.server_port,
+    callback_interval = excluded.callback_interval,
+    hostname = excluded.hostname,
+    status = excluded.status,
+    last_seen = excluded.last_seen;
+`
+	if _, err := s.DB.Exec(query,
+		agent.ID, agent.OS, agent.Arch, agent.Targeted,
+		agent.AgentIP, agent.ServerIP, agent.ServerPort,
+		agent.CallbackInterval, agent.Hostname, agent.Status,
+		agent.LastSeen,
+	); err != nil {
+		return fmt.Errorf("RegisterAgent: %w", err)
+	}
+
+	return nil
+}
