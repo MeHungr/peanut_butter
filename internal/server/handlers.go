@@ -4,13 +4,13 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
-	"github.com/google/uuid"
 )
 
 func requireLocalhost(next http.HandlerFunc) http.HandlerFunc {
@@ -26,7 +26,7 @@ func requireLocalhost(next http.HandlerFunc) http.HandlerFunc {
 
 // RegisterHandler handles the registration of an agent to the server
 // The /register endpoint expects an agent_id in a POST request
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST. This is the only allowed method
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -59,14 +59,25 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	agent.LastSeen = &now
 
-	// Maps the agent's id to the agent itself
-	agents[agent.ID] = &agent
+	// Convert the api.Agent to a storage.Agent
+	storageAgent := apiToStorageAgent(agent)
+	// Attempt to register the agent with the db
+	if err := srv.storage.RegisterAgent(storageAgent); err != nil {
+		log.Printf("RegisterAgent failed for %s: %v", agent.ID, err)
+		http.Error(w, "Failed to register agent", http.StatusInternalServerError)
+		return
+	}
 
 	// Sends back a registered message
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	msg := api.Message{
+		Message: "Registered",
+	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Registered"))
-
+	if err := json.NewEncoder(w).Encode(msg); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 	fmt.Printf("Agent: %s has registered\n", agent.ID)
 }
 
@@ -161,7 +172,7 @@ func ResultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validates that the task ID is non-empty
-	if result.TaskID == "" {
+	if result.TaskID == 0 {
 		http.Error(w, "No task ID", http.StatusBadRequest)
 		return
 	}
@@ -438,7 +449,6 @@ func EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	// Timestamp the task and assign an id
 	now := time.Now()
 	task.Timestamp = &now
-	task.TaskID = uuid.New().String()
 
 	// Add the task to the agent's queue
 	tasks[task.AgentID] = append(tasks[task.AgentID], task)

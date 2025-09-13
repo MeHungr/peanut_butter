@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
 var (
@@ -13,14 +14,26 @@ var (
 	tasks  = make(map[string][]*api.Task) // package level map that maps agent ids to the agent's tasks
 )
 
+type Server struct {
+	storage *storage.Storage
+	port    int
+}
+
+func New(storage *storage.Storage, port int) *Server {
+	return &Server{
+		storage: storage,
+		port:    port,
+	}
+}
+
 // Start starts the server and starts listening on the specified port
-func Start() {
+func (srv *Server) Start() error {
 
 	// --------------------------------
 	// AGENT ENDPOINTS
 	// --------------------------------
 	// Defines the /register path and uses RegisterHandler to handle data
-	http.HandleFunc("/register", RegisterHandler)
+	http.HandleFunc("/register", srv.RegisterHandler)
 	// Defines the /task path and uses TaskHandler to handle data
 	http.HandleFunc("/task", TaskHandler)
 	// Defines the /result path and uses ResultHandler to handle data
@@ -47,10 +60,13 @@ func Start() {
 	http.HandleFunc("/set-targets", requireLocalhost(SetTargetsHandler))
 
 	// Starts the server
-	err := http.ListenAndServe(":8080", nil)
+	port := fmt.Sprintf(":%d", srv.port)
+	err := http.ListenAndServe(port, nil)
 
-	// Prints an error if the server fails to start
+	// Throws an error if the server fails to start
 	if err != nil {
-		fmt.Println("Error: ", err)
+		return fmt.Errorf("Error: %w", err)
 	}
+
+	return nil
 }

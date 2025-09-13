@@ -40,9 +40,7 @@ func (agent *Agent) Register() error {
 	url := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 
 	// Marshals the agent's id into JSON
-	body, err := json.Marshal(map[string]string{
-		"agent_id": agent.ID,
-	})
+	body, err := json.Marshal(agent)
 	if err != nil {
 		return fmt.Errorf("Failed to marshal JSON: %w", err)
 	}
@@ -59,15 +57,19 @@ func (agent *Agent) Register() error {
 	if err != nil {
 		return fmt.Errorf("Failed to read response: %w", err)
 	}
-	//Check response code and handle errors
+
+	// Print server response
 	if resp.StatusCode == http.StatusOK {
-		fmt.Println(string(respBody))
+		var msg api.Message
+		if err := json.Unmarshal(respBody, &msg); err != nil {
+			return fmt.Errorf("Failed to unmarshal server response: %w", err)
+		}
+		fmt.Println(msg.Message)
 	} else {
 		return fmt.Errorf("Server returned status code %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	return nil
-
 }
 
 // GetTask retrieves a task from the server to be executed
