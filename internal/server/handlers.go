@@ -65,7 +65,9 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Sends back a registered message
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Registered\n"))
+	w.Write([]byte("Registered"))
+
+	fmt.Printf("Agent: %s has registered\n", agent.ID)
 }
 
 // TaskHandler handles the distribution of tasks to agents
