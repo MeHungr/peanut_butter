@@ -116,7 +116,7 @@ func (agent *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
 	}
 
 	switch task.Type {
-	case "command":
+	case api.Command:
 		result.Output, result.ReturnCode = executeCommand(task)
 	default:
 		return result, fmt.Errorf("Undefined task type in JSON: %s", task.Type)

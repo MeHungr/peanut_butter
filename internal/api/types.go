@@ -20,11 +20,17 @@ type Agent struct {
 	LastSeen         *time.Time    `json:"last_seen,omitempty"`
 }
 
+type TaskType string
+
+const (
+	Command TaskType = "command"
+)
+
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
 	TaskID    string         `json:"id"`
 	AgentID   string         `json:"agent_id"`
-	Type      string         `json:"type"`
+	Type      TaskType       `json:"type"`
 	Completed bool           `json:"completed,omitempty"`
 	Payload   string         `json:"payload,omitempty"`
 	Timeout   *time.Duration `json:"timeout,omitempty"`

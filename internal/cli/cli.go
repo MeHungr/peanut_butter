@@ -70,7 +70,7 @@ func EnqueueCommand(client *http.Client, cmd string, timeoutSeconds int) error {
 		if agent.Targeted {
 			// Define the task
 			task := api.Task{
-				Type:      "command",
+				Type:      api.Command,
 				AgentID:   agent.ID,
 				Completed: false,
 				Payload:   cmd,
@@ -181,42 +181,3 @@ func ListTargets(client *http.Client) error {
 
 	return nil
 }
-
-// // Run is the main loop for the cli
-// func Run() {
-// 	client := &http.Client{Timeout: 10 * time.Second}
-//
-// 	// Opens a new input stream from stdin
-// 	scanner := bufio.NewScanner(os.Stdin)
-//
-// 	for {
-// 		fmt.Print("pbctl > ")
-// 		// Takes the next line of input and handles errors
-// 		if !scanner.Scan() {
-// 			fmt.Println("\nExiting CLI")
-// 			if err := scanner.Err(); err != nil {
-// 				fmt.Println("Error reading input:", err)
-// 			}
-// 			return
-// 		}
-// 		input := strings.TrimSpace(scanner.Text())
-// 		tokens := strings.Fields(input)
-// 		cmd := tokens[0]
-//
-// 		switch cmd {
-// 		case "agents":
-// 			ListAgents(client)
-// 		case "command":
-// 			if len(tokens) != 2 {
-// 				fmt.Println("Usage:\npbctl > command \"<command + args>\"")
-// 				break
-// 			}
-// 			EnqueueCommand(client, tokens[1], 0)
-// 		case "quit", "exit":
-// 			fmt.Println("Exiting CLI")
-// 			return
-// 		default:
-// 			fmt.Println("Unknown command")
-// 		}
-// 	}
-// }
