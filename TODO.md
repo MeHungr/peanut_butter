@@ -4,12 +4,11 @@
 - [x] Finish basic implementation
 - [x] Implement DB
 - [x] Disallow duplicate tasks and agents
-- [ ] `pbctl agents` - change the way agents are displayed
+- [x] `pbctl agents` - change the way agents are displayed
 - [ ] Allow editing of agents
 - [ ] Allow selecting agents by OS type
 - [ ] More verbose task status
-- [ ] More verbose agent status
-- [ ] CI/CD
+- [x] More verbose agent status
 - [ ] Add /results endpoint
 - [ ] Agent authentication
 
