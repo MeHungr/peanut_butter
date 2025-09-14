@@ -16,7 +16,6 @@ func apiToStorageAgent(a *api.Agent) *storage.Agent {
 		ServerPort:       a.ServerPort,
 		CallbackInterval: a.CallbackInterval,
 		Hostname:         a.Hostname,
-		Status:           a.Status,
 		LastSeen:         a.LastSeen,
 	}
 }
@@ -32,7 +31,6 @@ func storageToAPIAgent(a *storage.Agent) *api.Agent {
 		ServerPort:       a.ServerPort,
 		CallbackInterval: a.CallbackInterval,
 		Hostname:         a.Hostname,
-		Status:           a.Status,
 		LastSeen:         a.LastSeen,
 	}
 }

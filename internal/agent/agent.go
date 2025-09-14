@@ -10,6 +10,8 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -23,6 +25,28 @@ type Agent struct {
 	api.Agent
 	Debug bool
 	*http.Client
+}
+
+// New creates a new Agent with sensible defaults.
+func New(id, serverIP string, serverPort int, callbackInterval time.Duration, debug bool) *Agent {
+	hostname, err := os.Hostname()
+	if err != nil {
+		hostname = "unknown"
+	}
+	return &Agent{
+		Agent: api.Agent{
+			ID:               id,
+			AgentIP:          GetLocalIP(),
+			ServerIP:         serverIP,
+			ServerPort:       serverPort,
+			CallbackInterval: callbackInterval,
+			Hostname:         hostname,
+			OS:               runtime.GOOS,
+			Arch:             runtime.GOARCH,
+		},
+		Debug:  debug,
+		Client: &http.Client{Timeout: 10 * time.Second}, // good default
+	}
 }
 
 func GetLocalIP() string {
@@ -49,7 +73,6 @@ func (a *Agent) ToAPI() api.Agent {
 		ServerPort:       a.ServerPort,
 		CallbackInterval: a.CallbackInterval,
 		Hostname:         a.Hostname,
-		Status:           a.Status,
 		LastSeen:         a.LastSeen,
 	}
 }

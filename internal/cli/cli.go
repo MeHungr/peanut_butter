@@ -6,10 +6,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
-
-	// "os"
-	// "strings"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
@@ -90,21 +86,6 @@ func EnqueueCommand(client *http.Client, cmd string, timeoutSeconds int) error {
 	fmt.Println(msg.Message)
 
 	return nil
-}
-
-// ParseIDs converts a comma-separated string inot a clean slice of agent IDs
-func ParseIDs(input string) []string {
-	rawIDs := strings.Split(input, ",") // IDs with whitespace
-
-	// Trim whitespace and return new slice
-	var ids []string
-	for _, id := range rawIDs {
-		id = strings.TrimSpace(id)
-		if id != "" {
-			ids = append(ids, id)
-		}
-	}
-	return ids
 }
 
 // AddTargets makes agents targets of tasks

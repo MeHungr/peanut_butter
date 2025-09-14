@@ -16,7 +16,6 @@ type Agent struct {
 	ServerPort       int           `json:"server_port,omitempty"`
 	CallbackInterval time.Duration `json:"callback_interval,omitempty"`
 	Hostname         string        `json:"hostname,omitempty"`
-	Status           string        `json:"status,omitempty"`
 	LastSeen         *time.Time    `json:"last_seen,omitempty"`
 }
 
