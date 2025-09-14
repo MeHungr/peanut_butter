@@ -1,0 +1,4 @@
+# Ignore logs
+*.log
+*.db
+bin/**

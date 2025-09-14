@@ -9,7 +9,7 @@ var timeoutSeconds int
 
 // commandCmd r command
 var commandCmd = &cobra.Command{
-	Use:   "command",
+	Use:   "command \"<command to execute>\"",
 	Short: "Enqueues the following command to targets",
 	Long: `Enqueues the following command to assigned targets.
 Assign targets using "pbctl targets set|add <comma separated ip addresses>"

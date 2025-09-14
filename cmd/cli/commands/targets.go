@@ -14,18 +14,17 @@ var targetsCmd = &cobra.Command{
 
 // targetsAddCmd is the 'add' subcommand of targets
 var targetsAddCmd = &cobra.Command{
-	Use:   "add <comma separated agent IDs>",
+	Use:   "add <agent IDs>",
 	Short: "Add agents to the current target list",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		agentIDs := cli.ParseIDs(args[0])
-		return cli.AddTargets(client, agentIDs)
+		return cli.AddTargets(client, args)
 	},
 }
 
-// targetsGetCmd is the 'get' subcommand of targets
+// targetsGetCmd is the 'list' subcommand of targets
 var targetsGetCmd = &cobra.Command{
-	Use:   "get",
+	Use:   "list",
 	Short: "Get the list of current targets",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cli.ListTargets(client)
@@ -34,12 +33,11 @@ var targetsGetCmd = &cobra.Command{
 
 // targetsSetCmd is the 'set' subcommand of targets
 var targetsSetCmd = &cobra.Command{
-	Use:   "set <comma separated agent IDs>",
+	Use:   "set <agent IDs>",
 	Short: "Set the current target list to the agents provided",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		agentIDs := cli.ParseIDs(args[0])
-		return cli.SetTargets(client, agentIDs)
+		return cli.SetTargets(client, args)
 	},
 }
 
@@ -54,12 +52,11 @@ var targetsClearCmd = &cobra.Command{
 
 // targetsUntargetCmd is the 'untarget' subcommand of targets
 var targetsUntargetCmd = &cobra.Command{
-	Use:   "untarget <comma separated agent IDs>",
+	Use:   "untarget <agent IDs>",
 	Short: "Untargets the specified agents",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		agentIDs := cli.ParseIDs(args[0])
-		return cli.Untarget(client, agentIDs)
+		return cli.Untarget(client, args)
 	},
 }
 
