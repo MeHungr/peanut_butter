@@ -2,8 +2,6 @@
 package server
 
 import (
-	"time"
-
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/storage"
 )
@@ -28,6 +26,7 @@ func storageToAPIAgent(a *storage.Agent) *api.Agent {
 		ID:               a.ID,
 		OS:               a.OS,
 		Arch:             a.Arch,
+		Status:           DeriveAgentStatus(*a.LastSeen, a.CallbackInterval),
 		Targeted:         a.Targeted,
 		AgentIP:          a.AgentIP,
 		ServerIP:         a.ServerIP,
@@ -36,12 +35,6 @@ func storageToAPIAgent(a *storage.Agent) *api.Agent {
 		Hostname:         a.Hostname,
 		LastSeen:         a.LastSeen,
 	}
-}
-
-func storageToAPIAgentWithStatus(a *storage.Agent, now time.Time) *api.Agent {
-	agent := storageToAPIAgent(a)
-	agent.Status = DeriveAgentStatus(*agent.LastSeen, now, agent.CallbackInterval)
-	return agent
 }
 
 func storageToAPITask(t *storage.Task) *api.Task {

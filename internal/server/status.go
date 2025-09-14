@@ -14,8 +14,8 @@ const (
 	StaleMultiplier  StatusMultiplier = 5
 )
 
-func DeriveAgentStatus(lastSeen time.Time, now time.Time, callbackInterval time.Duration) api.AgentStatus {
-	delta := now.Sub(lastSeen)
+func DeriveAgentStatus(lastSeen time.Time, callbackInterval time.Duration) api.AgentStatus {
+	delta := time.Since(lastSeen)
 
 	// If agent was never seen, set to offline
 	if lastSeen.IsZero() {

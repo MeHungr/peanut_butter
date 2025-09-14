@@ -10,7 +10,74 @@ import (
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/ui"
 )
+
+// humanizeSince humanizes time deltas into a user friendly format
+func humanizeSince(t time.Time) string {
+	if t.IsZero() {
+		return "never"
+	}
+
+	delta := time.Since(t)
+
+	switch {
+	// In the case of clock skew, allow for future case
+	case delta < 0:
+		return "in the future"
+	// Now
+	case delta < time.Second:
+		return "now"
+	// Seconds
+	case delta < time.Minute:
+		return fmt.Sprintf("%ds ago", int(delta.Seconds()))
+	// Minutes
+	case delta < time.Hour:
+		return fmt.Sprintf("%dm ago", int(delta.Minutes()))
+	// Hours
+	case delta < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(delta.Hours()))
+	// Anything else
+	default:
+		return fmt.Sprintf("%dd ago", int(delta.Hours()/24))
+	}
+}
+
+// boolToString converts a boolean value to 'yes' or 'no'
+func boolToString(b bool) string {
+	var str string
+	switch b {
+	case true:
+		str = "yes"
+	case false:
+		str = "no"
+	}
+	return str
+
+}
+
+func agentsToRows(agents []*api.Agent) []ui.AgentRow {
+	rows := make([]ui.AgentRow, 0, len(agents))
+
+	// Iterate through agents and convert to AgentRows
+	for _, a := range agents {
+		agentRow := ui.AgentRow{
+			ID:               a.ID,
+			OS:               a.OS,
+			Arch:             a.Arch,
+			Status:           string(a.Status),
+			Targeted:         boolToString(a.Targeted),
+			Hostname:         a.Hostname,
+			LastSeen:         humanizeSince(*a.LastSeen),
+			CallbackInterval: int(a.CallbackInterval / time.Second),
+			AgentIP:          a.AgentIP,
+			ServerIP:         a.ServerIP,
+			ServerPort:       a.ServerPort,
+		}
+		rows = append(rows, agentRow)
+	}
+	return rows
+}
 
 // getAgents returns a list of agents registered with the server
 func getAgents(client *http.Client) ([]*api.Agent, error) {
@@ -34,17 +101,15 @@ func getAgents(client *http.Client) ([]*api.Agent, error) {
 }
 
 // ListAgents reaches out to the /get-agents endpoint and prints connected agents
-func ListAgents(client *http.Client) error {
+func ListAgents(client *http.Client, wideFlag bool) error {
 	// Retrieves the list of agents
 	agents, err := getAgents(client)
 	if err != nil {
 		return err
 	}
 
-	// Prints out each agent and last seen time
-	for _, a := range agents {
-		fmt.Printf("%s - Last seen: %s\n", a.ID, a.LastSeen.Format(time.RFC3339))
-	}
+	rows := agentsToRows(agents)
+	ui.RenderAgents(rows, wideFlag)
 
 	return nil
 }

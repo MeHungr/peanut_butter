@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS agents (
 	server_port INTEGER,
 	callback_interval INTEGER,
 	hostname TEXT,
-	status TEXT,
 	last_seen TIMESTAMP
 );
 CREATE TABLE IF NOT EXISTS tasks (
@@ -94,8 +93,8 @@ CREATE INDEX IF NOT EXISTS idx_results_agent ON results(agent_id);
 func (s *Storage) RegisterAgent(agent *Agent) error {
 	// Query for the db
 	query := `
-INSERT INTO agents (agent_id, os, arch, targeted, agent_ip, server_ip, server_port, callback_interval, hostname, status, last_seen)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO agents (agent_id, os, arch, targeted, agent_ip, server_ip, server_port, callback_interval, hostname, last_seen)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(agent_id) DO UPDATE SET
     os = excluded.os,
     arch = excluded.arch,
@@ -105,14 +104,13 @@ ON CONFLICT(agent_id) DO UPDATE SET
     server_port = excluded.server_port,
     callback_interval = excluded.callback_interval,
     hostname = excluded.hostname,
-    status = excluded.status,
     last_seen = excluded.last_seen;
 `
 	// Execute the query and replace ? with each variable
 	if _, err := s.DB.Exec(query,
 		agent.ID, agent.OS, agent.Arch, agent.Targeted,
 		agent.AgentIP, agent.ServerIP, agent.ServerPort,
-		agent.CallbackInterval, agent.Hostname, agent.Status,
+		agent.CallbackInterval, agent.Hostname,
 		agent.LastSeen,
 	); err != nil {
 		return fmt.Errorf("RegisterAgent: %w", err)
