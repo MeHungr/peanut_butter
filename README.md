@@ -31,10 +31,18 @@ internal
 ```
 
 ## Installation
-Clone the repo, and run make in the project root
+Clone the repo, and configure before building
+1. Clone the repo and cd into the root directory
 ``` bash
 git clone https://github.com/MeHungr/peanut_butter
 cd peanut_butter
+```
+2. Edit `cmd/agent/main.go`
+- Set agentID, serverIP, serverPort, callbackInterval, and debugMode
+3. Edit `cmd/server/main.go`
+- Set port
+4. Build the binaries
+``` bash
 make # places binaries in <project root>/bin
 make install   # optional: install pbctl to ~/.local/bin
 ```
