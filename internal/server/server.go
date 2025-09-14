@@ -35,9 +35,9 @@ func (srv *Server) Start() error {
 	// Defines the /register path and uses RegisterHandler to handle data
 	http.HandleFunc("/register", srv.RegisterHandler)
 	// Defines the /task path and uses TaskHandler to handle data
-	http.HandleFunc("/task", TaskHandler)
+	http.HandleFunc("/task", srv.TaskHandler)
 	// Defines the /result path and uses ResultHandler to handle data
-	http.HandleFunc("/result", ResultHandler)
+	http.HandleFunc("/result", srv.ResultHandler)
 
 	// --------------------------------
 	// CLI ENDPOINTS
@@ -45,19 +45,19 @@ func (srv *Server) Start() error {
 	// These all require localhost and must be ran on the server host
 
 	// Defines the /get-agents path and returns a list of connected agents
-	http.HandleFunc("/get-agents", requireLocalhost(GetAgentsHandler))
+	http.HandleFunc("/get-agents", requireLocalhost(srv.GetAgentsHandler))
 	// Defines the /enqueue path and enqueues tasks to list of targeted agents
-	http.HandleFunc("/enqueue", requireLocalhost(EnqueueHandler))
+	http.HandleFunc("/enqueue", requireLocalhost(srv.EnqueueHandler))
 	// Defines the /add-targets path and allows targeting of agents
-	http.HandleFunc("/add-targets", requireLocalhost(AddTargetsHandler))
+	http.HandleFunc("/add-targets", requireLocalhost(srv.AddTargetsHandler))
 	// Defines the /get-targets path and returns a list of targeted agents
-	http.HandleFunc("/get-targets", requireLocalhost(GetTargetsHandler))
+	http.HandleFunc("/get-targets", requireLocalhost(srv.GetTargetsHandler))
 	// Defines the /untarget path and untargets the provided agents
-	http.HandleFunc("/untarget", requireLocalhost(UntargetHandler))
+	http.HandleFunc("/untarget", requireLocalhost(srv.UntargetHandler))
 	// Defines the /clear-targets path and clears all targets
-	http.HandleFunc("/clear-targets", requireLocalhost(ClearTargetsHandler))
+	http.HandleFunc("/clear-targets", requireLocalhost(srv.ClearTargetsHandler))
 	// Defines the /set-targets path and clears targets before adding the provided ones
-	http.HandleFunc("/set-targets", requireLocalhost(SetTargetsHandler))
+	http.HandleFunc("/set-targets", requireLocalhost(srv.SetTargetsHandler))
 
 	// Starts the server
 	port := fmt.Sprintf(":%d", srv.port)
