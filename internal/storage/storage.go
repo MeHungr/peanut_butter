@@ -144,7 +144,7 @@ func (s *Storage) GetAgentByID(agentID string) (*Agent, error) {
 // UpdateLastSeen updates the last seen time of an agent to the provided time
 func (s *Storage) UpdateLastSeen(agentID string, t time.Time) error {
 	// Query for the db
-	query := `UPDATE agents SET last_seen = WHERE agent_id = ?`
+	query := `UPDATE agents SET last_seen = ? WHERE agent_id = ?`
 
 	// Execute the query
 	if _, err := s.DB.Exec(query, t, agentID); err != nil {
