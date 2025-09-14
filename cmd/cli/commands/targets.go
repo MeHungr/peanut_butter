@@ -25,7 +25,7 @@ var targetsAddCmd = &cobra.Command{
 
 // targetsGetCmd is the 'get' subcommand of targets
 var targetsGetCmd = &cobra.Command{
-	Use:   "get",
+	Use:   "list",
 	Short: "Get the list of current targets",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cli.ListTargets(client)

@@ -217,13 +217,15 @@ func (srv *Server) ResultHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Truncate output for logs
+	out := strings.SplitN(result.Output, "\n", 2)[0] // first line only
+	if len(out) > 80 {
+		out = out[:77] + "..."
+	}
 	// Prints to the console the task being completed
-	log.Printf(`
-[agent=%s task=%d] payload="%s" return_code=%d
-Output:
-%s
+	log.Printf(`[agent=%s task=%d rc=%d] payload="%q" output=%q
 `,
-		result.AgentID, result.TaskID, result.Payload, result.ReturnCode, result.Output)
+		result.AgentID, result.TaskID, result.ReturnCode, result.Payload, out)
 
 	msg := api.Message{
 		Message: "Result received",
