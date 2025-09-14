@@ -78,6 +78,11 @@ CREATE TABLE IF NOT EXISTS results (
 	FOREIGN KEY (task_id) REFERENCES tasks(task_id),
 	FOREIGN KEY (agent_id) REFERENCES agents(agent_id)
 );
+CREATE INDEX IF NOT EXISTS idx_agents_id ON agents(agent_id);
+CREATE INDEX IF NOT EXISTS idx_agents_targeted ON agents(targeted);
+CREATE INDEX IF NOT EXISTS idx_tasks_agent_completed ON tasks(agent_id, completed);
+CREATE INDEX IF NOT EXISTS idx_results_task ON results(task_id);
+CREATE INDEX IF NOT EXISTS idx_results_agent ON results(agent_id);
 `
 
 	_, err := s.DB.Exec(schema)
