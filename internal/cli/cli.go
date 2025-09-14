@@ -204,7 +204,12 @@ func ListTargets(client *http.Client, wideFlag bool) error {
 		return err
 	}
 
-	fmt.Printf("%d targets found\n", count)
+	switch count {
+	case 1:
+		fmt.Printf("%d target found\n", count)
+	default:
+		fmt.Printf("%d targets found \n", count)
+	}
 	rows := agentsToRows(targets)
 	ui.RenderAgents(rows, wideFlag)
 
