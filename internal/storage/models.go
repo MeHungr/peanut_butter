@@ -1,3 +1,4 @@
+// Contains the structs used for interacting with the database
 package storage
 
 import (
@@ -17,7 +18,6 @@ type Agent struct {
 	ServerPort       int           `db:"server_port"`
 	CallbackInterval time.Duration `db:"callback_interval"`
 	Hostname         string        `db:"hostname"`
-	Status           string        `db:"status"`
 	LastSeen         *time.Time    `db:"last_seen"`
 }
 

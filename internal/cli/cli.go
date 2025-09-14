@@ -1,3 +1,4 @@
+// Contains logic for executing commands via the cli
 package cli
 
 import (

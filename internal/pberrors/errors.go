@@ -1,3 +1,4 @@
+// Contains any errors used in the internals
 package pberrors
 
 import "errors"

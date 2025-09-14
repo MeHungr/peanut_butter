@@ -257,8 +257,9 @@ func (srv *Server) GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Converts storage.Agents to api.Agents and adds them to response body
 	var resp api.GetAgentsResponse
+	now := time.Now().UTC()
 	for _, a := range agents {
-		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
+		resp.Agents = append(resp.Agents, storageToAPIAgentWithStatus(&a, now))
 	}
 
 	// Encodes JSON and sends message
@@ -322,8 +323,9 @@ func (srv *Server) GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert storage.Agents to api.Agents and add to response body
 	var resp api.GetTargetsResponse
+	now := time.Now().UTC()
 	for _, t := range targets {
-		resp.Agents = append(resp.Agents, storageToAPIAgent(&t))
+		resp.Agents = append(resp.Agents, storageToAPIAgentWithStatus(&t, now))
 	}
 	resp.Count = len(resp.Agents)
 

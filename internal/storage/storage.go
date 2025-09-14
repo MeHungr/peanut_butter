@@ -1,3 +1,4 @@
+// Contains all database logic
 package storage
 
 import (

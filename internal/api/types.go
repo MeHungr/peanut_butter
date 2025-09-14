@@ -5,11 +5,22 @@ import (
 	"time"
 )
 
+// Defines the AgentStatus type
+type AgentStatus string
+
+// Defines the possible types of agent statuses
+const (
+	AgentStatusOnline  AgentStatus = "online"
+	AgentStatusStale   AgentStatus = "stale"
+	AgentStatusOffline AgentStatus = "offline"
+)
+
 // Agent represents a single registered agent in the C2
 type Agent struct {
 	ID               string        `json:"agent_id"`
 	OS               string        `json:"os,omitempty"`
 	Arch             string        `json:"arch,omitempty"`
+	Status           AgentStatus   `json:"status,omitempty"`
 	Targeted         bool          `json:"targeted,omitempty"`
 	AgentIP          string        `json:"agent_ip,omitempty"`
 	ServerIP         string        `json:"server_ip,omitempty"`
