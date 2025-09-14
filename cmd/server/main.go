@@ -14,6 +14,8 @@ func main() {
 	}
 	defer db.DB.Close()
 
+	// Constructs the server and starts it
+	// 				 (db object, port)
 	srv := server.New(db, 8080)
 	if err := srv.Start(); err != nil {
 		log.Fatalf("Server exited: %v", err)
