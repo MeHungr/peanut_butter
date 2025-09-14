@@ -75,6 +75,6 @@ func init() {
 	targetsCmd.AddCommand(targetsClearCmd)
 	targetsCmd.AddCommand(targetsUntargetCmd)
 
-	targetsAddCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+	targetsGetCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 
 }
