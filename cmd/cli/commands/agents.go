@@ -13,8 +13,10 @@ var agentsCmd = &cobra.Command{
 	Short: "Manage all agents",
 	Long:  `Manage agents: list agents`,
 }
+
+// agentsListCmd represents the agents 'list' subcommand
 var agentsListCmd = &cobra.Command{
-	Use: "list",
+	Use:   "list",
 	Short: "List all agents",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		wideFlag, err := cmd.Flags().GetBool("wide")
@@ -28,6 +30,6 @@ var agentsListCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(agentsCmd)
 
-	agentsCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+	agentsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	agentsCmd.AddCommand(agentsListCmd)
 }
