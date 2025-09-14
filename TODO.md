@@ -2,9 +2,15 @@
 
 ## Core
 - [x] Finish basic implementation
-- [ ] Implement DB
+- [x] Implement DB
+- [x] Disallow duplicate tasks and agents
+- [ ] `pbctl agents` - change the way agents are displayed
+- [ ] Allow editing of agents
+- [ ] Allow selecting agents by OS type
+- [ ] More verbose task status
+- [ ] More verbose agent status
+- [ ] CI/CD
 - [ ] Add /results endpoint
-- [ ] Disallow duplicate tasks and agents
 - [ ] Agent authentication
 
 ## Security
@@ -14,4 +20,5 @@
 ## Quality of Life
 - [ ] More task types
 - [ ] Web UI??
-- [ ] Logging!!
+- [x] Logging!!
+- [ ] More logging?
