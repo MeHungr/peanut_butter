@@ -24,15 +24,38 @@ var targetsAddCmd = &cobra.Command{
 	},
 }
 
-// targetsGetCmd is the 'list' subcommand of targets
-var targetsGetCmd = &cobra.Command{
+// targetsListCmd is the 'list' subcommand of targets
+var targetsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all current targets",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Retrieve the wide flag
 		wideFlag, err := cmd.Flags().GetBool("wide")
 		if err != nil {
 			return fmt.Errorf("retrieving wide flag: %w", err)
 		}
+
+		// Retrieve the watch flag/value
+		watchVal, err := cmd.Flags().GetString("watch")
+		if err != nil {
+			return fmt.Errorf("retrieving watch flag: %w", err)
+		}
+
+		// Parse the interval from the watch flag
+		interval, err := cli.ParseWatchInterval(watchVal)
+		if err != nil {
+			return fmt.Errorf("error parsing interval: %w", err)
+		}
+
+		// If watch is enabled, watch
+		if interval > 0 {
+			cli.Watch(interval, func() error {
+				return cli.ListTargets(client, wideFlag)
+			})
+			return nil
+		}
+
+		// Else, just print the table
 		return cli.ListTargets(client, wideFlag)
 	},
 }
@@ -70,11 +93,12 @@ var targetsUntargetCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(targetsCmd)
 	targetsCmd.AddCommand(targetsAddCmd)
-	targetsCmd.AddCommand(targetsGetCmd)
+	targetsCmd.AddCommand(targetsListCmd)
 	targetsCmd.AddCommand(targetsSetCmd)
 	targetsCmd.AddCommand(targetsClearCmd)
 	targetsCmd.AddCommand(targetsUntargetCmd)
 
-	targetsGetCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
-
+	targetsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+	targetsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
+	targetsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
 }

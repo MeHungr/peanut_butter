@@ -39,4 +39,6 @@ type Result struct {
 	AgentID    string `db:"agent_id"`
 	Output     string `db:"output"`
 	ReturnCode int    `db:"return_code"`
+	Type       string `db:"type"`
+	Payload    string `db:"payload"`
 }

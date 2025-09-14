@@ -70,3 +70,25 @@ func apiToStorageResult(r *api.Result) *storage.Result {
 		ReturnCode: r.ReturnCode,
 	}
 }
+
+func storageToAPIResult(r *storage.Result) *api.Result {
+	return &api.Result{
+		ResultID: r.ResultID,
+		Task: api.Task{
+			TaskID:  r.TaskID,
+			AgentID: r.AgentID,
+			Type:    api.TaskType(r.Type),
+			Payload: r.Payload,
+		},
+		Output:     r.Output,
+		ReturnCode: r.ReturnCode,
+	}
+}
+
+func storagetoAPIResults(results []storage.Result) []*api.Result {
+	apiResults := make([]*api.Result, 0, len(results))
+	for _, r := range results {
+		apiResults = append(apiResults, storageToAPIResult(&r))
+	}
+	return apiResults
+}

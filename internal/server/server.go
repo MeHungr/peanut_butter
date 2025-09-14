@@ -58,6 +58,8 @@ func (srv *Server) Start() error {
 	http.HandleFunc("/clear-targets", requireLocalhost(srv.ClearTargetsHandler))
 	// Defines the /set-targets path and clears targets before adding the provided ones
 	http.HandleFunc("/set-targets", requireLocalhost(srv.SetTargetsHandler))
+	// Defines the /get-results path and sends results to the requester
+	http.HandleFunc("/get-results", requireLocalhost(srv.GetResultsHandler))
 
 	// Starts the server
 	port := fmt.Sprintf(":%d", srv.port)

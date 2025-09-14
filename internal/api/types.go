@@ -81,6 +81,16 @@ type EnqueueRequest struct {
 	Timeout int      `json:"timeout,omitempty"` // seconds
 }
 
+// GetResultsRequest represents a request to retrieve results on the /get-results endpoint
+type GetResultsRequest struct {
+	AgentID string `json:"agent_id,omitempty"`
+}
+
+// GetResultsResponse represents a response from the server on the /get-results endpoint
+type GetResultsResponse struct {
+	Results []*Result `json:"results"`
+}
+
 // Message represents a json message sent by the server
 type Message struct {
 	Message string `json:"message"`

@@ -19,10 +19,33 @@ var agentsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all agents",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Retrieve the wide flag
 		wideFlag, err := cmd.Flags().GetBool("wide")
 		if err != nil {
 			return fmt.Errorf("retrieving wide flag: %w", err)
 		}
+
+		// Retrieve the watch flag/value
+		watchVal, err := cmd.Flags().GetString("watch")
+		if err != nil {
+			return fmt.Errorf("retrieving watch flag: %w", err)
+		}
+
+		// Parse the interval from the watch flag
+		interval, err := cli.ParseWatchInterval(watchVal)
+		if err != nil {
+			return fmt.Errorf("error parsing interval: %w", err)
+		}
+
+		// If watch is enabled, watch
+		if interval > 0 {
+			cli.Watch(interval, func() error {
+				return cli.ListAgents(client, wideFlag)
+			})
+			return nil
+		}
+
+		// Else, just print the table
 		return cli.ListAgents(client, wideFlag)
 	},
 }
@@ -30,6 +53,9 @@ var agentsListCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(agentsCmd)
 
-	agentsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	agentsCmd.AddCommand(agentsListCmd)
+
+	agentsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+	agentsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
+	agentsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
 }

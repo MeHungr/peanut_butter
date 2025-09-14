@@ -26,6 +26,17 @@ type AgentRow struct {
 	ServerPort       int
 }
 
+// ResultRow is the cli representation of a result
+type ResultRow struct {
+	ResultID   string
+	TaskID     string
+	AgentID    string
+	Output     string
+	ReturnCode string
+	Payload    string
+	Type       string
+}
+
 // RenderAgents renders a table of agents to the command line
 func RenderAgents(rows []AgentRow, wide bool) {
 	// Create a new table directed to stdout
@@ -69,5 +80,36 @@ func RenderAgents(rows []AgentRow, wide bool) {
 	})
 	tw.SetStyle(table.StyleColoredMagentaWhiteOnBlack)
 	// Render the table
+	tw.Render()
+}
+
+func RenderResults(rows []ResultRow, wide bool) {
+	// Create a new table directed to stdout
+	tw := table.NewWriter()
+	tw.SetOutputMirror(os.Stdout)
+
+	// Create the header and append it to the table
+	header := table.Row{"AGENT ID", "TYPE", "PAYLOAD", "OUTPUT"}
+	if wide {
+		header = append(header, "RETURN CODE", "RESULT ID", "TASK ID")
+	}
+	tw.AppendHeader(header)
+
+	// Create the rows and append them to the table
+	for _, r := range rows {
+		row := table.Row{r.AgentID, r.Type, r.Payload, r.Output}
+		if wide {
+			row = append(row, r.ReturnCode, r.ResultID, r.TaskID)
+		}
+		tw.AppendRow(row)
+	}
+
+	// Allows the OUTPUT column to wrap
+	tw.SetColumnConfigs([]table.ColumnConfig{
+		{Name: "PAYLOAD", WidthMax: 40},
+		{Name: "OUTPUT", WidthMax: 80},
+	})
+
+	tw.SetStyle(table.StyleColoredMagentaWhiteOnBlack)
 	tw.Render()
 }

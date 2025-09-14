@@ -7,11 +7,18 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
+	"os/exec"
+	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/ui"
 )
+
+var baseURL = "http://localhost:8080"
 
 // humanizeSince humanizes time deltas into a user friendly format
 func humanizeSince(t time.Time) string {
@@ -79,9 +86,28 @@ func agentsToRows(agents []*api.Agent) []ui.AgentRow {
 	return rows
 }
 
+func resultsToRows(results []*api.Result) []ui.ResultRow {
+	rows := make([]ui.ResultRow, 0, len(results))
+
+	// Iterate through agents and convert to AgentRows
+	for _, r := range results {
+		resultRow := ui.ResultRow{
+			ResultID:   strconv.Itoa(r.ResultID),
+			TaskID:     strconv.Itoa(r.TaskID),
+			AgentID:    r.AgentID,
+			Type:       string(r.Type),
+			Output:     r.Output,
+			Payload:    r.Payload,
+			ReturnCode: strconv.Itoa(r.ReturnCode),
+		}
+		rows = append(rows, resultRow)
+	}
+	return rows
+}
+
 // getAgents returns a list of agents registered with the server
 func getAgents(client *http.Client) ([]*api.Agent, int, error) {
-	url := "http://localhost:8080/get-agents"
+	url := baseURL + "/get-agents"
 	// Sends a GET request to the /get-agents endpoint and handles errors
 	resp, err := client.Get(url)
 	if err != nil {
@@ -98,6 +124,75 @@ func getAgents(client *http.Client) ([]*api.Agent, int, error) {
 	// Returns the list of agents
 	return agents.Agents, agents.Count, nil
 
+}
+
+// getResults returns a list of results for all agents or a specified agent
+func getResults(client *http.Client, agentID string) (*api.GetResultsResponse, error) {
+	uri := baseURL + "/get-results"
+	if agentID != "" {
+		uri += "?agent_id=" + url.QueryEscape(agentID)
+	}
+
+	resp, err := client.Get(uri)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to send GET: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, respBody)
+	}
+
+	var out api.GetResultsResponse
+	if err := json.Unmarshal(respBody, &out); err != nil {
+		return nil, fmt.Errorf("Failed to unmarshal JSON: %w", err)
+	}
+
+	return &out, nil
+}
+
+// clearScreen clears the screen on multiple OSes
+func clearScreen() {
+	switch runtime.GOOS {
+	case "windows":
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		_ = cmd.Run()
+	default:
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		_ = cmd.Run()
+	}
+}
+
+// ParseWatchInterval parses a watch flag string into a duration.
+// If val is empty, it returns 0 (disabled).
+// If val is a bare number, it's interpreted as seconds.
+func ParseWatchInterval(val string) (time.Duration, error) {
+	if val == "" {
+		return 0, nil
+	}
+	// try full duration format first: 500ms, 2s, 1m
+	if d, err := time.ParseDuration(val); err == nil {
+		return d, nil
+	}
+	// try interpreting as seconds if just a number
+	if d, err := time.ParseDuration(val + "s"); err == nil {
+		return d, nil
+	}
+	return 0, fmt.Errorf("invalid watch interval: %q (examples: 2s, 5, 750ms)", val)
+}
+
+// Watch repeatedly clears the screen and executes fn at a given interval.
+func Watch(interval time.Duration, fn func() error) {
+	for {
+		clearScreen()
+		if err := fn(); err != nil {
+			fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		}
+		time.Sleep(interval)
+	}
 }
 
 // ListAgents reaches out to the /get-agents endpoint and prints connected agents
@@ -121,9 +216,21 @@ func ListAgents(client *http.Client, wideFlag bool) error {
 	return nil
 }
 
+func ListResults(client *http.Client, agentID string, wideFlag bool) error {
+	// Retrieves the list of results
+	resp, err := getResults(client, agentID)
+	if err != nil {
+		return fmt.Errorf("Failed to get results: %w", err)
+	}
+
+	rows := resultsToRows(resp.Results)
+	ui.RenderResults(rows, wideFlag)
+	return nil
+}
+
 // EnqueueCommand sends a task for each targeted agent to the server with type command and the specified payload
 func EnqueueCommand(client *http.Client, cmd string, timeoutSeconds int) error {
-	url := "http://localhost:8080/enqueue"
+	url := baseURL + "/enqueue"
 
 	req := api.EnqueueRequest{
 		Type:    api.Command,
@@ -163,7 +270,7 @@ func EnqueueCommand(client *http.Client, cmd string, timeoutSeconds int) error {
 
 // AddTargets makes agents targets of tasks
 func AddTargets(client *http.Client, agentIDs []string) error {
-	url := "http://localhost:8080/add-targets"
+	url := baseURL + "/add-targets"
 	targets := api.TargetsRequest{AgentIDs: agentIDs}
 
 	payload, err := json.Marshal(targets)
@@ -187,7 +294,7 @@ func AddTargets(client *http.Client, agentIDs []string) error {
 
 // getTargets retrieves the current targets from the server
 func getTargets(client *http.Client) ([]*api.Agent, int, error) {
-	url := "http://localhost:8080/get-targets"
+	url := baseURL + "/get-targets"
 
 	var targetsResponse *api.GetTargetsResponse
 
@@ -225,7 +332,7 @@ func ListTargets(client *http.Client, wideFlag bool) error {
 
 // Untarget sets a list of agents as untargeted
 func Untarget(client *http.Client, agentIDs []string) error {
-	url := "http://localhost:8080/untarget"
+	url := baseURL + "/untarget"
 
 	// Marshal the agent ids into json
 	payload, err := json.Marshal(api.TargetsRequest{AgentIDs: agentIDs})
@@ -257,7 +364,7 @@ func Untarget(client *http.Client, agentIDs []string) error {
 
 // ClearTargets clears all targets
 func ClearTargets(client *http.Client) error {
-	url := "http://localhost:8080/clear-targets"
+	url := baseURL + "/clear-targets"
 
 	// Construct DELETE request
 	req, err := http.NewRequest(http.MethodDelete, url, nil)
@@ -292,7 +399,7 @@ func ClearTargets(client *http.Client) error {
 
 // SetTargets clears all targets then sets the provided agents as targets
 func SetTargets(client *http.Client, agentIDs []string) error {
-	url := "http://localhost:8080/set-targets"
+	url := baseURL + "/set-targets"
 
 	// Construct PUT payload
 	payload, err := json.Marshal(api.TargetsRequest{AgentIDs: agentIDs})

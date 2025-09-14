@@ -7,7 +7,7 @@ import (
 
 var timeoutSeconds int
 
-// commandCmd r command
+// commandCmd represents the command command
 var commandCmd = &cobra.Command{
 	Use:   "command \"<command to execute>\"",
 	Short: "Enqueues the following command to targets",

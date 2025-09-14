@@ -511,3 +511,34 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	// Log to server
 	log.Printf("[enqueue count=%d type=%s] payload=%q", count, req.Type, out)
 }
+
+// GetResultsHandler retrieves results from the db and responds with a slice of results
+func (srv *Server) GetResultsHandler(w http.ResponseWriter, r *http.Request) {
+	// Only allow GET
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// optional ?agent_id= query parameter
+	agentID := r.URL.Query().Get("agent_id")
+
+	// Get results from db
+	results, err := srv.storage.GetResults(agentID)
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	// Generate response
+	resp := api.GetResultsResponse{
+		Results: storagetoAPIResults(results),
+	}
+
+	// Marshal response and send
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
+}

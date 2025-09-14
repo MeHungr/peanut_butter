@@ -359,3 +359,32 @@ VALUES (?, ?, ?, ?, ?)
 	// No errors
 	return nil
 }
+
+// GetResults returns results for all agents or a specific agent
+// An empty agentID will return results of all agents
+func (s *Storage) GetResults(agentID string) ([]Result, error) {
+	// Initialize variables
+	var (
+		results []Result
+		// Allows for expansion
+		args []any
+	)
+	query := `
+SELECT r.result_id, r.agent_id, r.task_id, r.output, r.return_code, t.type, t.payload
+FROM results r
+JOIN tasks t ON r.task_id = t.task_id
+`
+
+	// If agentID is provided, modify the query to reflect that
+	if agentID != "" {
+		query += ` WHERE agent_id = ?`
+		// Make args expand to the agent id
+		args = append(args, agentID)
+	}
+
+	// args expands to agent id or nothing if no agent id was specified
+	if err := s.DB.Select(&results, query, args...); err != nil {
+		return nil, fmt.Errorf("GetResults: %w", err)
+	}
+	return results, nil
+}
