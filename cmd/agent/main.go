@@ -17,6 +17,7 @@ func main() {
 			CallbackInterval: 10 * time.Second,
 		},
 		Client: &http.Client{Timeout: 10 * time.Second},
+		Debug:  true,
 	}
 
 	a.Start()
