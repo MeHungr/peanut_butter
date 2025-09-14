@@ -2,10 +2,12 @@
 package ui
 
 import (
+	"fmt"
 	"os"
 
+	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/jedib0t/go-pretty/v6/table"
-	// "github.com/jedib0t/go-pretty/v6/text"
+	"github.com/jedib0t/go-pretty/v6/text"
 )
 
 // AgentRow is the cli representation of an agent
@@ -46,6 +48,26 @@ func RenderAgents(rows []AgentRow, wide bool) {
 		tw.AppendRow(row)
 	}
 
+	// Style options
+	tw.SetColumnConfigs([]table.ColumnConfig{
+		{
+			Name: "STATUS",
+			Transformer: func(val any) string {
+				s := fmt.Sprint(val)
+				switch s {
+				case string(api.AgentStatusOnline):
+					return text.Colors{text.FgGreen}.Sprint(s)
+				case string(api.AgentStatusStale):
+					return text.Colors{text.FgYellow}.Sprint(s)
+				case string(api.AgentStatusOffline):
+					return text.Colors{text.FgRed}.Sprint(s)
+				default:
+					return s
+				}
+			},
+		},
+	})
+	tw.SetStyle(table.StyleColoredMagentaWhiteOnBlack)
 	// Render the table
 	tw.Render()
 }
