@@ -5,6 +5,7 @@
 - [x] Implement DB
 - [x] Disallow duplicate tasks and agents
 - [x] `pbctl agents` - change the way agents are displayed
+- [ ] Watch flag for agents list
 - [ ] Select all targets
 - [ ] Allow editing of agents
 - [ ] Allow selecting targets by OS type
