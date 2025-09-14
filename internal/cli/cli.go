@@ -80,32 +80,39 @@ func agentsToRows(agents []*api.Agent) []ui.AgentRow {
 }
 
 // getAgents returns a list of agents registered with the server
-func getAgents(client *http.Client) ([]*api.Agent, error) {
+func getAgents(client *http.Client) ([]*api.Agent, int, error) {
 	url := "http://localhost:8080/get-agents"
 	// Sends a GET request to the /get-agents endpoint and handles errors
 	resp, err := client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to send GET request: %w", err)
+		return nil, 0, fmt.Errorf("Failed to send GET request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	// Decodes JSON into api.Agent slice and handles errors
 	var agents api.GetAgentsResponse
 	if err := json.NewDecoder(resp.Body).Decode(&agents); err != nil {
-		return nil, fmt.Errorf("Failed to decode JSON: %w", err)
+		return nil, 0, fmt.Errorf("Failed to decode JSON: %w", err)
 	}
 
 	// Returns the list of agents
-	return agents.Agents, nil
+	return agents.Agents, agents.Count, nil
 
 }
 
 // ListAgents reaches out to the /get-agents endpoint and prints connected agents
 func ListAgents(client *http.Client, wideFlag bool) error {
 	// Retrieves the list of agents
-	agents, err := getAgents(client)
+	agents, count, err := getAgents(client)
 	if err != nil {
 		return err
+	}
+
+	switch count {
+	case 1:
+		fmt.Printf("%d agents found\n", count)
+	default:
+		fmt.Printf("%d agents found \n", count)
 	}
 
 	rows := agentsToRows(agents)

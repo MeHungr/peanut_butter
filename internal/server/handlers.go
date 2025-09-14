@@ -257,9 +257,12 @@ func (srv *Server) GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Converts storage.Agents to api.Agents and adds them to response body
 	var resp api.GetAgentsResponse
+	var count int
 	for _, a := range agents {
 		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
+		count++
 	}
+	resp.Count = count
 
 	// Encodes JSON and sends message
 	w.Header().Set("Content-Type", "application/json")
