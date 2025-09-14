@@ -42,11 +42,11 @@ release: clean
 	    os=$${platform%/*}; arch=$${platform#*/}; \
 	    outdir=$(BINARY_DIR)/$${os}_$${arch}; mkdir -p $$outdir; \
 	    echo "Building server for $$platform..."; \
-	    env GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/server $(PKG_SERVER); \
+	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/server $(PKG_SERVER); \
 	    echo "Building agent for $$platform..."; \
-	    env GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/agent $(PKG_AGENT); \
+	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/agent $(PKG_AGENT); \
 	    echo "Building cli for $$platform..."; \
-	    env GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbctl $(PKG_CLI); \
+	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbctl $(PKG_CLI); \
 	done
 	@echo "Release builds done. Dist dir: $(BINARY_DIR)"
 
