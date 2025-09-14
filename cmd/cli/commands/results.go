@@ -18,20 +18,21 @@ var resultsCmd = &cobra.Command{
 }
 
 var resultsListCmd = &cobra.Command{
-	Use:   "list <all|agent_id>",
+	Use:   "list",
 	Short: "List all results or all results for a given agent",
 	Long: `List all results or all results for a given agent
 Example:
-	pbctl results list all
-	pbctl results list agent1
+	pbctl results list
+	pbctl results list -a agent1
+	pbctl results list --agent agent1
 `,
-	Args: cobra.MinimumNArgs(1), // Ensures at least one argument
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Parse the agent id. Set to "" if "all" is passed
-		agentID := args[0]
-		if agentID == "all" {
-			agentID = ""
+		// Retrieve the agent id flag
+		agentID, err := cmd.Flags().GetString("agent")
+		if err != nil {
+			return fmt.Errorf("retrieving agent flag: %w", err)
 		}
+
 		// Retrieve the wide flag
 		wideFlag, err := cmd.Flags().GetBool("wide")
 		if err != nil {
@@ -70,5 +71,7 @@ func init() {
 
 	resultsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	resultsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
+	resultsListCmd.Flags().StringP("agent", "a", "", "Filter results by agent ID")
 	resultsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
+	resultsListCmd.Flags().Lookup("agent").NoOptDefVal = ""
 }

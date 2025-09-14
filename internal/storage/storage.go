@@ -377,7 +377,7 @@ JOIN tasks t ON r.task_id = t.task_id
 
 	// If agentID is provided, modify the query to reflect that
 	if agentID != "" {
-		query += ` WHERE agent_id = ?`
+		query += ` WHERE r.agent_id = ?`
 		// Make args expand to the agent id
 		args = append(args, agentID)
 	}
