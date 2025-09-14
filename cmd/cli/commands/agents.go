@@ -10,17 +10,18 @@ import (
 // agentsCmd represents the agents command
 var agentsCmd = &cobra.Command{
 	Use:   "agents",
-	Short: "Lists all agents that have connected to the server",
-	Long: `Lists the agents that have previously connected to the server.
-This command prints them in the format:
-AgentID - LastSeenTime`,
+	Short: "Manage all agents",
+	Long:  `Manage agents: list agents`,
+}
+var agentsListCmd = &cobra.Command{
+	Use: "list",
+	Short: "List all agents",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		wideFlag, err := cmd.Flags().GetBool("wide")
 		if err != nil {
 			return fmt.Errorf("retrieving wide flag: %w", err)
 		}
-		cli.ListAgents(client, wideFlag)
-		return nil
+		return cli.ListAgents(client, wideFlag)
 	},
 }
 
@@ -28,4 +29,5 @@ func init() {
 	rootCmd.AddCommand(agentsCmd)
 
 	agentsCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+	agentsCmd.AddCommand(agentsListCmd)
 }

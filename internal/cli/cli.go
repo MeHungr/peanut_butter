@@ -198,16 +198,15 @@ func getTargets(client *http.Client) ([]*api.Agent, int, error) {
 }
 
 // ListTargets lists the targets from getTargets in a user friendly format
-func ListTargets(client *http.Client) error {
+func ListTargets(client *http.Client, wideFlag bool) error {
 	targets, count, err := getTargets(client)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Number of targets: %d\n\n", count)
-	for _, target := range targets {
-		fmt.Printf("%s - Last Seen: %s\n", target.ID, target.LastSeen.Format(time.RFC3339))
-	}
+	fmt.Printf("%d targets found\n", count)
+	rows := agentsToRows(targets)
+	ui.RenderAgents(rows, wideFlag)
 
 	return nil
 }

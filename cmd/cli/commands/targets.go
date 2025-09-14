@@ -1,6 +1,8 @@
 package commands
 
 import (
+	"fmt"
+
 	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
 )
@@ -25,9 +27,13 @@ var targetsAddCmd = &cobra.Command{
 // targetsGetCmd is the 'list' subcommand of targets
 var targetsGetCmd = &cobra.Command{
 	Use:   "list",
-	Short: "Get the list of current targets",
+	Short: "List all current targets",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.ListTargets(client)
+		wideFlag, err := cmd.Flags().GetBool("wide")
+		if err != nil {
+			return fmt.Errorf("retrieving wide flag: %w", err)
+		}
+		return cli.ListTargets(client, wideFlag)
 	},
 }
 
@@ -68,4 +74,7 @@ func init() {
 	targetsCmd.AddCommand(targetsSetCmd)
 	targetsCmd.AddCommand(targetsClearCmd)
 	targetsCmd.AddCommand(targetsUntargetCmd)
+
+	targetsAddCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
+
 }
