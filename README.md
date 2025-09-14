@@ -43,8 +43,7 @@ cd peanut_butter
 - Set port
 4. Build the binaries
 ``` bash
-make # places binaries in <project root>/bin
-make install   # optional: install pbctl to ~/.local/bin
+make # places binaries in <project root>/bin and installs the cli
 ```
 
 ## Usage
@@ -54,8 +53,8 @@ Currently, the server and agents run as executable files. Execute the respective
 ``` bash
 pbctl help
 pbctl agents list
-pbctl command "echo Hello"
 pbctl targets set 10.1.1.1 10.1.1.2
+pbctl command "echo Hello"
 ```
 
 ## Roadmap
