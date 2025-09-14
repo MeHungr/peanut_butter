@@ -499,6 +499,12 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Truncate payload if too long
+	out := req.Payload
+	if len(out) > 80 {
+		out = out[:77] + "..."
+	}
+
 	// Log to server
-	log.Printf("Enqueued %d tasks:\nPayload:%s", count, req.Payload)
+	log.Printf("[enqueue count=%d type=%s] payload=%q", count, req.Type, out)
 }
