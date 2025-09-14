@@ -444,7 +444,7 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 
 	var req api.EnqueueRequest
 	// Decode the JSON into an api.EnqueueRequest
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid task", http.StatusUnsupportedMediaType)
 		return
 	}
