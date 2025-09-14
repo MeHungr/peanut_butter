@@ -42,12 +42,12 @@ dev: clean build-server build-agent build-cli
 .PHONY: build-server
 build-server:
 	@mkdir -p $(BINARY_DIR)
-	$(GO) build -o $(BINARY_DIR)/server $(PKG_SERVER)
+	$(GO) build -o $(BINARY_DIR)/pbserver $(PKG_SERVER)
 
 .PHONY: build-agent
 build-agent:
 	@mkdir -p $(BINARY_DIR)
-	$(GO) build -o $(BINARY_DIR)/agent $(PKG_AGENT)
+	$(GO) build -o $(BINARY_DIR)/pbagent $(PKG_AGENT)
 
 .PHONY: build-cli
 build-cli:
@@ -65,9 +65,9 @@ release: clean
 	    os=$${platform%/*}; arch=$${platform#*/}; \
 	    outdir=$(BINARY_DIR)/$${os}_$${arch}; mkdir -p $$outdir; \
 	    echo "Building server for $$platform..."; \
-	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/server $(PKG_SERVER); \
+	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbserver $(PKG_SERVER); \
 	    echo "Building agent for $$platform..."; \
-	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/agent $(PKG_AGENT); \
+	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbagent $(PKG_AGENT); \
 	    echo "Building cli for $$platform..."; \
 	    env GOOS=$$os GOARCH=$$arch $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $$outdir/pbctl $(PKG_CLI); \
 	done
