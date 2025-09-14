@@ -223,7 +223,7 @@ func (srv *Server) ResultHandler(w http.ResponseWriter, r *http.Request) {
 		out = out[:77] + "..."
 	}
 	// Prints to the console the task being completed
-	log.Printf(`[agent=%s task=%d rc=%d] payload="%q" output=%q
+	log.Printf(`[agent=%s task=%d rc=%d] payload=%q output=%q
 `,
 		result.AgentID, result.TaskID, result.ReturnCode, result.Payload, out)
 
