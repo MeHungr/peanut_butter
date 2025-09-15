@@ -55,6 +55,7 @@ type Result struct {
 	Task       `json:"task"`
 	Output     string `json:"output"`
 	ReturnCode int    `json:"return_code"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // GetAgentsResponse represents the response from the server on the /get-agents endpoint

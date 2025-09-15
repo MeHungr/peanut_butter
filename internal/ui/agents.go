@@ -35,6 +35,7 @@ type ResultRow struct {
 	ReturnCode string
 	Payload    string
 	Type       string
+	CreatedAt  string
 }
 
 // RenderAgents renders a table of agents to the command line
@@ -91,7 +92,7 @@ func RenderResults(rows []ResultRow, wide bool) {
 	// Create the header and append it to the table
 	header := table.Row{"AGENT ID", "TYPE", "PAYLOAD", "OUTPUT"}
 	if wide {
-		header = append(header, "RETURN CODE", "RESULT ID", "TASK ID")
+		header = append(header, "RETURN CODE", "RESULT ID", "TASK ID", "CREATED AT")
 	}
 	tw.AppendHeader(header)
 
@@ -99,7 +100,7 @@ func RenderResults(rows []ResultRow, wide bool) {
 	for _, r := range rows {
 		row := table.Row{r.AgentID, r.Type, r.Payload, r.Output}
 		if wide {
-			row = append(row, r.ReturnCode, r.ResultID, r.TaskID)
+			row = append(row, r.ReturnCode, r.ResultID, r.TaskID, r.CreatedAt)
 		}
 		tw.AppendRow(row)
 	}
@@ -107,7 +108,7 @@ func RenderResults(rows []ResultRow, wide bool) {
 	// Allows the OUTPUT column to wrap
 	tw.SetColumnConfigs([]table.ColumnConfig{
 		{Name: "PAYLOAD", WidthMax: 40},
-		{Name: "OUTPUT", WidthMax: 80},
+		{Name: "OUTPUT", WidthMax: 60},
 	})
 
 	tw.SetStyle(table.StyleColoredMagentaWhiteOnBlack)

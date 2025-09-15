@@ -7,6 +7,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -522,9 +523,14 @@ func (srv *Server) GetResultsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// optional ?agent_id= query parameter
 	agentID := r.URL.Query().Get("agent_id")
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		http.Error(w, "Invalid query parameter 'limit': %w", http.StatusBadRequest)
+		return
+	}
 
 	// Get results from db
-	results, err := srv.storage.GetResults(agentID)
+	results, err := srv.storage.GetResults(agentID, limit)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

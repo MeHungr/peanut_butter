@@ -68,6 +68,7 @@ func apiToStorageResult(r *api.Result) *storage.Result {
 		TaskID:     r.TaskID,
 		Output:     r.Output,
 		ReturnCode: r.ReturnCode,
+		CreatedAt:  r.CreatedAt,
 	}
 }
 
@@ -82,6 +83,7 @@ func storageToAPIResult(r *storage.Result) *api.Result {
 		},
 		Output:     r.Output,
 		ReturnCode: r.ReturnCode,
+		CreatedAt:  r.CreatedAt,
 	}
 }
 

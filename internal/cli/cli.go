@@ -99,6 +99,7 @@ func resultsToRows(results []*api.Result) []ui.ResultRow {
 			Output:     r.Output,
 			Payload:    r.Payload,
 			ReturnCode: strconv.Itoa(r.ReturnCode),
+			CreatedAt: r.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 		rows = append(rows, resultRow)
 	}
@@ -127,13 +128,23 @@ func getAgents(client *http.Client) ([]*api.Agent, int, error) {
 }
 
 // getResults returns a list of results for all agents or a specified agent
-func getResults(client *http.Client, agentID string) (*api.GetResultsResponse, error) {
+func getResults(client *http.Client, agentID string, limit int) (*api.GetResultsResponse, error) {
 	uri := baseURL + "/get-results"
-	if agentID != "" {
-		uri += "?agent_id=" + url.QueryEscape(agentID)
+	u, err := url.Parse(uri)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 
-	resp, err := client.Get(uri)
+	q := u.Query()
+	if agentID != "" {
+		q.Set("agent_id", agentID)
+	}
+	if limit > 0 {
+		q.Set("limit", strconv.Itoa(limit))
+	}
+	u.RawQuery = q.Encode()
+
+	resp, err := client.Get(u.String())
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send GET: %w", err)
 	}
@@ -216,9 +227,9 @@ func ListAgents(client *http.Client, wideFlag bool) error {
 	return nil
 }
 
-func ListResults(client *http.Client, agentID string, wideFlag bool) error {
+func ListResults(client *http.Client, agentID string, limit int, wideFlag bool) error {
 	// Retrieves the list of results
-	resp, err := getResults(client, agentID)
+	resp, err := getResults(client, agentID, limit)
 	if err != nil {
 		return fmt.Errorf("Failed to get results: %w", err)
 	}

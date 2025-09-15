@@ -74,6 +74,7 @@ CREATE TABLE IF NOT EXISTS results (
 	agent_id TEXT NOT NULL,
 	output TEXT,
 	return_code INTEGER,
+	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (task_id, agent_id),
 	FOREIGN KEY (task_id) REFERENCES tasks(task_id),
 	FOREIGN KEY (agent_id) REFERENCES agents(agent_id)
@@ -362,7 +363,7 @@ VALUES (?, ?, ?, ?, ?)
 
 // GetResults returns results for all agents or a specific agent
 // An empty agentID will return results of all agents
-func (s *Storage) GetResults(agentID string) ([]Result, error) {
+func (s *Storage) GetResults(agentID string, limit int) ([]Result, error) {
 	// Initialize variables
 	var (
 		results []Result
@@ -370,7 +371,7 @@ func (s *Storage) GetResults(agentID string) ([]Result, error) {
 		args []any
 	)
 	query := `
-SELECT r.result_id, r.agent_id, r.task_id, r.output, r.return_code, t.type, t.payload
+SELECT r.result_id, r.agent_id, r.task_id, r.output, r.return_code, r.created_at, t.type, t.payload
 FROM results r
 JOIN tasks t ON r.task_id = t.task_id
 `
@@ -380,6 +381,15 @@ JOIN tasks t ON r.task_id = t.task_id
 		query += ` WHERE r.agent_id = ?`
 		// Make args expand to the agent id
 		args = append(args, agentID)
+	}
+
+	query += ` ORDER BY r.created_at DESC`
+
+	// If a limit is provided, modify the query to limit results
+	if limit > 0 {
+		query += ` LIMIT ?`
+		// Add limit to args
+		args = append(args, limit)
 	}
 
 	// args expands to agent id or nothing if no agent id was specified
