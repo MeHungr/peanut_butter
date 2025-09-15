@@ -7,9 +7,16 @@ import (
 )
 
 func main() {
+	// ========== Config ==========
+	agentID := agent.GetLocalIP()
+	serverIP := "localhost"
+	serverPort := 8080
+	callbackInterval := 10 * time.Second
+	debugMode := true
+	// ============================
+
 	// Constructs the agent and starts it
-	//			  (agentID, serverIP, serverPort, callbackInterval, debugMode)
-	a := agent.New(agent.GetLocalIP(), "localhost", 8080, 10*time.Second, true)
+	a := agent.New(agentID, serverIP, serverPort, callbackInterval, debugMode)
 
 	a.Start()
 }

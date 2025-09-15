@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +18,7 @@ Example:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmdStr := args[0]
 
-		err := cli.EnqueueCommand(client, cmdStr, timeoutSeconds)
+		err := Client.EnqueueCommand(cmdStr, timeoutSeconds)
 		if err != nil {
 			return err
 		}

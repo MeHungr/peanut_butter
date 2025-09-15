@@ -7,11 +7,10 @@
 - [x] `pbctl agents` - change the way agents are displayed
 - [x] Watch flag for list functions
 - [ ] Select all targets
-- [ ] Allow editing of agents
 - [ ] Allow selecting targets by OS type
 - [ ] More verbose task status
 - [x] More verbose agent status
-- [ ] Add /results endpoint
+- [x] Add /results endpoint
 - [ ] Agent authentication
 
 ## Security

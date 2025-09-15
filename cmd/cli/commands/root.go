@@ -1,14 +1,13 @@
 package commands
 
 import (
-	"net/http"
 	"os"
-	"time"
 
+	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
 )
 
-var client = &http.Client{Timeout: 10 * time.Second}
+var Client *cli.Client
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -31,4 +30,6 @@ func Execute() {
 }
 
 func init() {
+	baseURL := "http://localhost:8080"
+	Client = cli.NewCLIClient(baseURL)
 }

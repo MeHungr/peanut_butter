@@ -20,7 +20,7 @@ var targetsAddCmd = &cobra.Command{
 	Short: "Add agents to the current target list",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.AddTargets(client, args)
+		return Client.AddTargets(args)
 	},
 }
 
@@ -50,13 +50,13 @@ var targetsListCmd = &cobra.Command{
 		// If watch is enabled, watch
 		if interval > 0 {
 			cli.Watch(interval, func() error {
-				return cli.ListTargets(client, wideFlag)
+				return Client.Targets(wideFlag)
 			})
 			return nil
 		}
 
 		// Else, just print the table
-		return cli.ListTargets(client, wideFlag)
+		return Client.Targets(wideFlag)
 	},
 }
 
@@ -66,7 +66,7 @@ var targetsSetCmd = &cobra.Command{
 	Short: "Set the current target list to the agents provided",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.SetTargets(client, args)
+		return Client.SetTargets(args)
 	},
 }
 
@@ -75,7 +75,7 @@ var targetsClearCmd = &cobra.Command{
 	Use:   "clear",
 	Short: "Clears the target list",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.ClearTargets(client)
+		return Client.ClearTargets()
 	},
 }
 
@@ -85,7 +85,7 @@ var targetsUntargetCmd = &cobra.Command{
 	Short: "Untargets the specified agents",
 	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return cli.Untarget(client, args)
+		return Client.Untarget(args)
 	},
 }
 

@@ -40,13 +40,13 @@ var agentsListCmd = &cobra.Command{
 		// If watch is enabled, watch
 		if interval > 0 {
 			cli.Watch(interval, func() error {
-				return cli.ListAgents(client, wideFlag)
+				return Client.Agents(wideFlag)
 			})
 			return nil
 		}
 
 		// Else, just print the table
-		return cli.ListAgents(client, wideFlag)
+		return Client.Agents(wideFlag)
 	},
 }
 

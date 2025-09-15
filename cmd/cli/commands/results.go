@@ -57,13 +57,13 @@ Example:
 		// If watch is enabled, watch
 		if interval > 0 {
 			cli.Watch(interval, func() error {
-				return cli.ListResults(client, agentID, limit, wideFlag)
+				return Client.Results(agentID, limit, wideFlag)
 			})
 			return nil
 		}
 
 		// Else, just print the table
-		return cli.ListResults(client, agentID, limit, wideFlag)
+		return Client.Results(agentID, limit, wideFlag)
 	},
 }
 

