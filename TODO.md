@@ -22,3 +22,6 @@
 - [ ] Web UI??
 - [x] Logging!!
 - [ ] More logging?
+
+## Fun
+- [ ] Different communication protocols? :3
