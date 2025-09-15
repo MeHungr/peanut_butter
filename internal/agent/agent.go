@@ -217,9 +217,6 @@ func (a *Agent) Start() {
 		task, err := a.GetTask()
 		if err != nil {
 			if errors.Is(err, pberrors.ErrInvalidAgentID) {
-				if a.Debug {
-					log.Printf("Agent ID %s invalid, re-registering...", a.ID)
-				}
 				a.registerUntilDone()
 				continue
 			}
