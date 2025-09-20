@@ -58,6 +58,11 @@ type Result struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// RegisterRequest represents a request from the agent on the /register endpoint
+type RegisterRequest struct {
+	Agent *Agent `json:"agent"`
+}
+
 // GetAgentsResponse represents the response from the server on the /get-agents endpoint
 type GetAgentsResponse struct {
 	Agents []*Agent `json:"agents"`
