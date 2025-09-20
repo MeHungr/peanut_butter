@@ -30,6 +30,11 @@ type Agent struct {
 	LastSeen         *time.Time    `json:"last_seen,omitempty"`
 }
 
+// RegisterRequest represents the request body for the /register endpoint
+type RegisterRequest struct {
+	Agent *Agent `json:"agent"`
+}
+
 // Defines the TaskType type (see below)
 type TaskType string
 
@@ -53,9 +58,9 @@ type Task struct {
 type Result struct {
 	ResultID   int `json:"result_id"`
 	Task       `json:"task"`
-	Output     string `json:"output"`
-	ReturnCode int    `json:"return_code"`
-	CreatedAt time.Time `json:"created_at"`
+	Output     string    `json:"output"`
+	ReturnCode int       `json:"return_code"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // GetAgentsResponse represents the response from the server on the /get-agents endpoint

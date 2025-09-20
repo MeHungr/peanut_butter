@@ -19,8 +19,12 @@ func (a *Agent) Register() error {
 	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 
-	// POST request with agent as body, writes response to resp
-	if err := api.DoPost(a.Client, uri, agent, &resp); err != nil {
+	req := api.RegisterRequest{
+		Agent: &agent,
+	}
+
+	// POST request with the register request as body, writes response to resp
+	if err := api.DoPost(a.Client, uri, req, &resp); err != nil {
 		return fmt.Errorf("Register: %w", err)
 	}
 
