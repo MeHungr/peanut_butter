@@ -15,6 +15,14 @@ const (
 	AgentStatusOffline AgentStatus = "offline"
 )
 
+// Defines the TaskType type (see below)
+type TaskType string
+
+// Defines the possible types of Tasks for Agents to use
+const (
+	Command TaskType = "command"
+)
+
 // Agent represents a single registered agent in the C2
 type Agent struct {
 	ID               string        `json:"agent_id"`
@@ -29,14 +37,6 @@ type Agent struct {
 	Hostname         string        `json:"hostname,omitempty"`
 	LastSeen         *time.Time    `json:"last_seen,omitempty"`
 }
-
-// Defines the TaskType type (see below)
-type TaskType string
-
-// Defines the possible types of Tasks for Agents to use
-const (
-	Command TaskType = "command"
-)
 
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
@@ -53,9 +53,9 @@ type Task struct {
 type Result struct {
 	ResultID   int `json:"result_id"`
 	Task       `json:"task"`
-	Output     string `json:"output"`
-	ReturnCode int    `json:"return_code"`
-	CreatedAt time.Time `json:"created_at"`
+	Output     string    `json:"output"`
+	ReturnCode int       `json:"return_code"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
 // RegisterRequest represents a request from the agent on the /register endpoint
@@ -71,7 +71,9 @@ type GetAgentsResponse struct {
 
 // AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
 type TargetsRequest struct {
-	AgentIDs []string `json:"agents"`
+	AgentIDs  []string `json:"agents"`
+	TargetAll bool     `json:"target_all,omitempty"`
+	OS        string   `json:"os,omitempty"`
 }
 
 // GetTargetsResponse represents the response from the server on the /get-targets endpoint

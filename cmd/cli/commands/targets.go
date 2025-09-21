@@ -7,6 +7,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// requireArgsUnlessAllFlag returns a function that requires at least one argument unless the all flag is specified
+func requireArgsUnlessAllFlag() func(cmd *cobra.Command, args []string) error {
+	// Define the function
+	return func(cmd *cobra.Command, args []string) error {
+		// Parse the selectAll flag from the command
+		selectAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return err
+		}
+
+		// If selectAll is true:
+		if selectAll {
+			return nil // skip positional-ID requirement
+		}
+		// Return the function returned by cobra.MinimumNArgs and pass in cmd and args
+		return cobra.MinimumNArgs(1)(cmd, args)
+	}
+}
+
 // targetsCmd represents the targets command
 var targetsCmd = &cobra.Command{
 	Use:   "targets",
@@ -18,9 +37,15 @@ var targetsCmd = &cobra.Command{
 var targetsAddCmd = &cobra.Command{
 	Use:   "add <agent IDs>",
 	Short: "Add agents to the current target list",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  requireArgsUnlessAllFlag(),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Client.AddTargets(args)
+		// Retrieve the all flag value
+		targetAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return fmt.Errorf("retrieving all flag: %w", err)
+		}
+
+		return Client.AddTargets(args, targetAll, "")
 	},
 }
 
@@ -64,9 +89,15 @@ var targetsListCmd = &cobra.Command{
 var targetsSetCmd = &cobra.Command{
 	Use:   "set <agent IDs>",
 	Short: "Set the current target list to the agents provided",
-	Args:  cobra.MinimumNArgs(1),
+	Args:  requireArgsUnlessAllFlag(),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Client.SetTargets(args)
+		// Retrieve the all flag value
+		targetAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return fmt.Errorf("retrieving all flag: %w", err)
+		}
+
+		return Client.SetTargets(args, targetAll, "")
 	},
 }
 
@@ -101,4 +132,6 @@ func init() {
 	targetsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	targetsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
 	targetsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
+	targetsSetCmd.Flags().BoolP("all", "a", false, "Override individual IDs and set all agents to targeted")
+	targetsAddCmd.Flags().BoolP("all", "a", false, "Override individual IDs and set all agents to targeted")
 }

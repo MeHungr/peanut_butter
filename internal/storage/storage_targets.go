@@ -58,6 +58,20 @@ func (s *Storage) ClearTargets() error {
 	return nil
 }
 
+// TargetAll sets all agents to targeted
+func (s *Storage) TargetAll() error {
+	// Query for the db
+	query := `UPDATE agents SET targeted = 1`
+
+	// Make all agents targeted
+	if _, err := s.DB.Exec(query); err != nil {
+		return fmt.Errorf("TargetAll: %w", err)
+	}
+
+	// No errors
+	return nil
+}
+
 // Untarget sets the passed in agents as untargeted
 func (s *Storage) Untarget(agentIDs []string) error {
 	// Prevents invalid SQL 'IN ()'

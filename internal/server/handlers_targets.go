@@ -53,10 +53,20 @@ func (srv *Server) AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Adds the requested agents as targets
-	if err := srv.storage.AddTargets(reqBody.AgentIDs); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
+	// If TargetAll is true, set all targets, else, add specified targets
+	switch reqBody.TargetAll {
+	case true:
+		// If TargetAll is set to true, target all and return
+		if err := srv.storage.TargetAll(); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+	case false:
+		// Adds the requested agents as targets
+		if err := srv.storage.AddTargets(reqBody.AgentIDs); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Response message
@@ -149,10 +159,20 @@ func (srv *Server) SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Clear then set targets
-	if err := srv.storage.SetTargets(reqBody.AgentIDs); err != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
-		return
+	// If TargetAll is true, set all targets, else, set specified targets
+	switch reqBody.TargetAll {
+	case true:
+		// If TargetAll is set to true, target all and return
+		if err := srv.storage.TargetAll(); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
+	case false:
+		// Clear all, then set specified targets
+		if err := srv.storage.SetTargets(reqBody.AgentIDs); err != nil {
+			http.Error(w, "Database error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	msg := api.Message{

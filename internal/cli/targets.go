@@ -9,9 +9,9 @@ import (
 )
 
 // AddTargets makes agents targets of tasks
-func (client *Client) AddTargets(agentIDs []string) error {
+func (client *Client) AddTargets(agentIDs []string, targetAll bool, os string) error {
 	uri := client.BaseURL + "/add-targets"
-	targets := api.TargetsRequest{AgentIDs: agentIDs}
+	targets := api.TargetsRequest{AgentIDs: agentIDs, TargetAll: targetAll, OS: os}
 	var resp api.Message
 
 	if err := api.DoPost(client.HTTPClient, uri, targets, &resp); err != nil {
@@ -84,9 +84,9 @@ func (client *Client) ClearTargets() error {
 }
 
 // SetTargets clears all targets then sets the provided agents as targets
-func (client *Client) SetTargets(agentIDs []string) error {
+func (client *Client) SetTargets(agentIDs []string, targetAll bool, os string) error {
 	uri := client.BaseURL + "/set-targets"
-	targets := api.TargetsRequest{AgentIDs: agentIDs}
+	targets := api.TargetsRequest{AgentIDs: agentIDs, TargetAll: targetAll, OS: os}
 	var resp api.Message
 
 	if err := api.DoRequest(client.HTTPClient, http.MethodPut, uri, targets, &resp); err != nil {
