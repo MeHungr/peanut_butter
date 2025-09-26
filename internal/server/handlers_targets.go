@@ -5,32 +5,57 @@ import (
 	"net/http"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
-// GetTargetsHandler sends a list of current targets
+// GetTargetsHandler returns the list of targeted agents
 func (srv *Server) GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
-	// Only allow GET
+	// Ensures GET method is used
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Query database for targets
-	targets, err := srv.storage.GetTargets()
+	// Parse query parameters
+	query := r.URL.Query()
+	filter := storage.AgentFilter{}
+
+	// ?all = true returns all agents
+	if query.Get("all") == "true" {
+		filter.All = true
+	}
+
+	// ?id=123&id=456
+	if ids, ok := query["id"]; ok {
+		filter.IDs = ids
+	}
+
+	// ?os=linux&os=windows
+	if oses, ok := query["os"]; ok {
+		filter.OSes = oses
+	}
+
+	// ?status=active&status=inactive
+	if statuses, ok := query["status"]; ok {
+		filter.Statuses = statuses
+	}
+
+	// Query database with filter
+	agents, err := srv.storage.GetTargets(filter)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
-	// Convert storage.Agents to api.Agents and add to response body
-	var resp api.GetTargetsResponse
-	for _, t := range targets {
-		resp.Agents = append(resp.Agents, storageToAPIAgent(&t))
+	// Converts storage.Agents to api.Agents and adds them to response body
+	var resp api.GetAgentsResponse
+	resp.Count = len(agents)
+	for _, a := range agents {
+		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
 	}
-	resp.Count = len(resp.Agents)
 
+	// Encodes JSON and sends message
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return

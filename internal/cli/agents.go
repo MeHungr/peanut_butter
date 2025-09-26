@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
@@ -33,11 +34,37 @@ func agentsToRows(agents []*api.Agent) []ui.AgentRow {
 }
 
 // getAgents returns a list of agents registered with the server
-func (client *Client) getAgents() ([]*api.Agent, int, error) {
+func (client *Client) getAgents(filter api.AgentFilter) ([]*api.Agent, int, error) {
 	uri := client.BaseURL + "/get-agents"
 	var agents api.GetAgentsResponse
 
-	if err := api.DoGet(client.HTTPClient, uri, &agents); err != nil {
+	// Create a url to add a query to
+	fullURL, err := url.Parse(uri)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	// Create the query
+	query := fullURL.Query()
+
+	// Add query parameters
+	if filter.All {
+		query.Set("all", "true")
+	}
+	for _, id := range filter.IDs {
+		query.Add("id", id)
+	}
+	for _, os := range filter.OSes {
+		query.Add("os", os)
+	}
+	for _, status := range filter.Statuses {
+		query.Add("status", status)
+	}
+
+	// Encode the query into the url
+	fullURL.RawQuery = query.Encode()
+
+	if err := api.DoGet(client.HTTPClient, fullURL.String(), &agents); err != nil {
 		return nil, 0, fmt.Errorf("getAgents: %w", err)
 	}
 
@@ -45,9 +72,9 @@ func (client *Client) getAgents() ([]*api.Agent, int, error) {
 }
 
 // Agents reaches out to the /get-agents endpoint and prints connected agents
-func (client *Client) Agents(wideFlag bool) error {
+func (client *Client) Agents(wideFlag bool, filter api.AgentFilter) error {
 	// Retrieves the list of agents
-	agents, count, err := client.getAgents()
+	agents, count, err := client.getAgents(filter)
 	if err != nil {
 		return err
 	}

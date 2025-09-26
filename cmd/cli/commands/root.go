@@ -2,12 +2,41 @@ package commands
 
 import (
 	"os"
+	"strings"
 
 	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
 )
 
+// Client defines the CLI client
 var Client *cli.Client
+
+// requireArgsUnlessAllFlag returns a function that requires at least one argument unless the all flag is specified
+func requireArgsUnlessAllFlag() func(cmd *cobra.Command, args []string) error {
+	// Define the function
+	return func(cmd *cobra.Command, args []string) error {
+		// Parse the selectAll flag from the command
+		selectAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return err
+		}
+
+		// If selectAll is true:
+		if selectAll {
+			return nil // skip positional-ID requirement
+		}
+		// Return the function returned by cobra.MinimumNArgs and pass in cmd and args
+		return cobra.MinimumNArgs(1)(cmd, args)
+	}
+}
+
+// parseOSes parses singular OSes from a comma separated list
+func parseOSes(oses string) []string {
+	if oses == "" {
+		return nil
+	}
+	return strings.Split(oses, ",")
+}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{

@@ -101,7 +101,7 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get all targeted agents
-	targets, err := srv.storage.GetTargets()
+	targets, err := srv.storage.GetTargets(storage.AgentFilter{All: true})
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

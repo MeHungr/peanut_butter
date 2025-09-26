@@ -94,3 +94,12 @@ func storagetoAPIResults(results []storage.Result) []*api.Result {
 	}
 	return apiResults
 }
+
+func apiToStorageFilter(filter api.AgentFilter) storage.AgentFilter {
+	return storage.AgentFilter {
+		All: filter.All,
+		IDs: filter.IDs,
+		OSes: filter.OSes,
+		Statuses: filter.Statuses,
+	}
+}

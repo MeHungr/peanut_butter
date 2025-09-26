@@ -2,19 +2,51 @@ package storage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
-// GetTargets returns a slice of all agents set to targeted in the db
-func (s *Storage) GetTargets() ([]Agent, error) {
-	// Query for the db
-	query := `SELECT * FROM agents WHERE targeted = 1`
+// GetTargets handles retrieving of agents given a filter (or none)
+func (s *Storage) GetTargets(filter AgentFilter) ([]Agent, error) {
+	base := `SELECT * FROM agents WHERE targeted = 1`
+	var whereClause []string
+	var args []any
 
-	// Create slice of Agents and query the db to fill it
+	// If the filter is not searching for all agents
+	if !filter.All {
+		// If filtering by id
+		if len(filter.IDs) > 0 {
+			clause, idArgs, _ := sqlx.In("id IN (?)", filter.IDs)
+			whereClause = append(whereClause, clause)
+			args = append(args, idArgs...)
+		}
+		// If filtering by OS
+		if len(filter.OSes) > 0 {
+			clause, osArgs, _ := sqlx.In("os IN (?)", filter.OSes)
+			whereClause = append(whereClause, clause)
+			args = append(args, osArgs...)
+		}
+		// If filtering by status
+		if len(filter.Statuses) > 0 {
+			clause, statusArgs, _ := sqlx.In("status IN (?)", filter.Statuses)
+			whereClause = append(whereClause, clause)
+			args = append(args, statusArgs...)
+		}
+	}
+
+	// Add the query filters to the base query
+	query := base
+	if len(whereClause) > 0 {
+		query += " AND " + strings.Join(whereClause, " AND ")
+	}
+
+	// Ensure the query works with the correct database syntax
+	query = s.DB.Rebind(query)
+
 	var targets []Agent
-	if err := s.DB.Select(&targets, query); err != nil {
-		return nil, fmt.Errorf("GetTargets: %w", err)
+	if err := s.DB.Select(&targets, query, args...); err != nil {
+		return nil, fmt.Errorf("GetAgents: %w", err)
 	}
 
 	return targets, nil

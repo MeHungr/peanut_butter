@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/ui"
@@ -24,11 +25,37 @@ func (client *Client) AddTargets(agentIDs []string, targetAll bool, os string) e
 }
 
 // getTargets retrieves the current targets from the server
-func (client *Client) getTargets() ([]*api.Agent, int, error) {
+func (client *Client) getTargets(filter api.AgentFilter) ([]*api.Agent, int, error) {
 	uri := client.BaseURL + "/get-targets"
 	var targetsResponse *api.GetTargetsResponse
 
-	if err := api.DoGet(client.HTTPClient, uri, &targetsResponse); err != nil {
+	// Create a url to add a query to
+	fullURL, err := url.Parse(uri)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	// Create the query
+	query := fullURL.Query()
+
+	// Add query parameters
+	if filter.All {
+		query.Set("all", "true")
+	}
+	for _, id := range filter.IDs {
+		query.Add("id", id)
+	}
+	for _, os := range filter.OSes {
+		query.Add("os", os)
+	}
+	for _, status := range filter.Statuses {
+		query.Add("status", status)
+	}
+
+	// Encode the query into the url
+	fullURL.RawQuery = query.Encode()
+
+	if err := api.DoGet(client.HTTPClient, fullURL.String(), &targetsResponse); err != nil {
 		return nil, 0, fmt.Errorf("getTargets: %w", err)
 	}
 
@@ -36,8 +63,8 @@ func (client *Client) getTargets() ([]*api.Agent, int, error) {
 }
 
 // Targets lists the targets from getTargets in a user friendly format
-func (client *Client) Targets(wideFlag bool) error {
-	targets, count, err := client.getTargets()
+func (client *Client) Targets(wideFlag bool, filter api.AgentFilter) error {
+	targets, count, err := client.getTargets(filter)
 	if err != nil {
 		return err
 	}

@@ -58,6 +58,13 @@ type Result struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+type AgentFilter struct {
+	All      bool
+	IDs      []string
+	OSes     []string
+	Statuses []string
+}
+
 // RegisterRequest represents a request from the agent on the /register endpoint
 type RegisterRequest struct {
 	Agent *Agent `json:"agent"`
