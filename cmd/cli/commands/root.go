@@ -2,7 +2,6 @@ package commands
 
 import (
 	"os"
-	"strings"
 
 	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
@@ -28,14 +27,6 @@ func requireArgsUnlessAllFlag() func(cmd *cobra.Command, args []string) error {
 		// Return the function returned by cobra.MinimumNArgs and pass in cmd and args
 		return cobra.MinimumNArgs(1)(cmd, args)
 	}
-}
-
-// parseOSes parses singular OSes from a comma separated list
-func parseOSes(oses string) []string {
-	if oses == "" {
-		return nil
-	}
-	return strings.Split(oses, ",")
 }
 
 // rootCmd represents the base command when called without any subcommands

@@ -55,13 +55,13 @@ var targetsListCmd = &cobra.Command{
 		}
 
 		// Grab filter flags and create a filter
-		osFilter, err := targetsCmd.PersistentFlags().GetString("os")
+		osFilter, err := targetsCmd.PersistentFlags().GetStringSlice("os")
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
 
 		filter := api.AgentFilter{
-			OSes: parseOSes(osFilter),
+			OSes: osFilter,
 		}
 
 		// If watch is enabled, watch
@@ -122,7 +122,7 @@ func init() {
 	targetsCmd.AddCommand(targetsUntargetCmd)
 
 	// Persistent flags
-	targetsCmd.PersistentFlags().StringP("os", "o", "", "Filter or target by OS type (accepted: linux, windows, mac). Singular or comma separated list")
+	targetsCmd.PersistentFlags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, mac). Singular or comma separated list")
 
 	// Flags
 	targetsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
