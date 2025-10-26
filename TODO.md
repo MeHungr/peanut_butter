@@ -7,7 +7,7 @@
 - [x] `pbctl agents` - change the way agents are displayed
 - [x] Watch flag for list functions
 - [x] Make RegisterRequest struct
-- [ ] Select all targets
+- [x] Select all targets
 - [ ] Allow selecting targets by OS type
 - [ ] More verbose task status
 - [ ] Interactive shell?
