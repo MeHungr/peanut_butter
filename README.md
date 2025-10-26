@@ -22,11 +22,12 @@ cmd
 ├── agent # agent entrypoint
 └── cli # cobra-based CLI
 internal
+├── agent # agent runtime
 ├── api # shared API types
+├── cli # cli & server communication logic
+├── pberrors # errors used internally
 ├── server # HTTP handlers & server logic
 ├── storage # database access (SQLite + sqlx)
-├── agent # agent runtime
-├── cli # cli & server communication logic
 └── ui # pretty-printing helpers
 ```
 
@@ -48,7 +49,19 @@ make # places binaries in <project root>/bin and installs the cli
 
 ## Usage
 ### Starting the server and agents
-Currently, the server and agents run as executable files. Execute the respective file to start the program.
+Both the server and agent can now be installed as services on linux and windows.
+Simply add a subcommand when running the executable:
+``` bash
+pbagent install   | pbserver install
+pbagent uninstall | pbserver uninstall
+pbagent start     | pbserver start
+pbagent stop      | pbserver stop
+```
+To run the executables in the foreground, run them with no subcommands:
+``` bash
+pbagent
+pbserver
+```
 ### Interact using the CLI
 ``` bash
 pbctl help
