@@ -2,10 +2,9 @@ package server
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/storage"
+	"net/http"
 )
 
 // GetTargetsHandler returns the list of targeted agents
@@ -79,7 +78,7 @@ func (srv *Server) AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If TargetAll is true, set all targets, else, add specified targets
-	switch reqBody.TargetAll {
+	switch reqBody.All {
 	case true:
 		// If TargetAll is set to true, target all and return
 		if err := srv.storage.TargetAll(); err != nil {
@@ -88,7 +87,7 @@ func (srv *Server) AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case false:
 		// Adds the requested agents as targets
-		if err := srv.storage.AddTargets(reqBody.AgentIDs); err != nil {
+		if err := srv.storage.AddTargets(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
@@ -125,7 +124,7 @@ func (srv *Server) UntargetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Untarget the provided agents
-	if err := srv.storage.Untarget(reqBody.AgentIDs); err != nil {
+	if err := srv.storage.Untarget(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -185,7 +184,7 @@ func (srv *Server) SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// If TargetAll is true, set all targets, else, set specified targets
-	switch reqBody.TargetAll {
+	switch reqBody.All {
 	case true:
 		// If TargetAll is set to true, target all and return
 		if err := srv.storage.TargetAll(); err != nil {
@@ -194,7 +193,7 @@ func (srv *Server) SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case false:
 		// Clear all, then set specified targets
-		if err := srv.storage.SetTargets(reqBody.AgentIDs); err != nil {
+		if err := srv.storage.SetTargets(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}

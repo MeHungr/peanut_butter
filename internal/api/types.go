@@ -78,9 +78,7 @@ type GetAgentsResponse struct {
 
 // AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
 type TargetsRequest struct {
-	AgentIDs  []string `json:"agents"`
-	TargetAll bool     `json:"target_all,omitempty"`
-	OS        string   `json:"os,omitempty"`
+	AgentFilter
 }
 
 // GetTargetsResponse represents the response from the server on the /get-targets endpoint
