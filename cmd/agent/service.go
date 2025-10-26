@@ -27,7 +27,7 @@ func getServiceConfig() *service.Config {
 	}
 
 	return &service.Config{
-		Name: svcName,
+		Name:        svcName,
 		DisplayName: svcDisplayName,
 		Description: svcDesc,
 	}

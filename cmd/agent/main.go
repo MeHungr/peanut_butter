@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/agent"
@@ -11,7 +12,7 @@ import (
 func main() {
 	// ========== Config ==========
 	agentID := agent.GetLocalIP()
-	serverIP := "localhost"
+	serverIP := "10.1.1.104"
 	serverPort := 8080
 	callbackInterval := 10 * time.Second
 	debugMode := false
@@ -29,11 +30,17 @@ func main() {
 		log.Fatalf("service.New: %v", err)
 	}
 
-	// svc.Run will block and handle install/start/stop subcommands
+	// Allows control functions
+	if len(os.Args) > 1 {
+		err = service.Control(svc, os.Args[1])
+		if err != nil {
+			log.Fatalf("Valid actions: install, uninstall, start, stop. Error: %v", err)
+		}
+		return
+	}
+
+	// svc.Run will block and run in foreground if no arguments are provided
 	if err := svc.Run(); err != nil {
 		log.Fatalf("service run error: %v", err)
 	}
-
-	// To run as a normal executable
-	// a.Start()
 }
