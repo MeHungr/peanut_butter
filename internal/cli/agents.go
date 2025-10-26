@@ -16,7 +16,7 @@ func agentsToRows(agents []*api.Agent) []ui.AgentRow {
 	// Iterate through agents and convert to AgentRows
 	for _, a := range agents {
 		agentRow := ui.AgentRow{
-			ID:               a.ID,
+			ID:               a.AgentID,
 			OS:               a.OS,
 			Arch:             a.Arch,
 			Status:           string(a.Status),

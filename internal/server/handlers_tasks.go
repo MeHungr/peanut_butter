@@ -29,13 +29,13 @@ func (srv *Server) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Validates that the agent ID is non-empty
-	if agent.ID == "" {
+	if agent.AgentID == "" {
 		http.Error(w, "No agent ID", http.StatusBadRequest)
 		return
 	}
 
 	// Retrives the agent from the db
-	storageAgent, err := srv.storage.GetAgentByID(agent.ID)
+	storageAgent, err := srv.storage.GetAgentByID(agent.AgentID)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -49,14 +49,14 @@ func (srv *Server) TaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Update agent's last seen time to now
 	now := time.Now().UTC()
-	if err := srv.storage.UpdateLastSeen(agent.ID, now); err != nil {
-		log.Printf("Failed to update last_seen for %s: %v\n", agent.ID, err)
+	if err := srv.storage.UpdateLastSeen(agent.AgentID, now); err != nil {
+		log.Printf("Failed to update last_seen for %s: %v\n", agent.AgentID, err)
 	}
 
 	// Retrieves the next task from the db
-	task, err := srv.storage.GetNextTask(agent.ID)
+	task, err := srv.storage.GetNextTask(agent.AgentID)
 	if err != nil {
-		log.Printf("GetNextTask failed for %s: %v\n", agent.ID, err)
+		log.Printf("GetNextTask failed for %s: %v\n", agent.AgentID, err)
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -115,7 +115,7 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Create the task
 		task := storage.Task{
-			AgentID:   a.ID,
+			AgentID:   a.AgentID,
 			Type:      req.Type,
 			Completed: false,
 			Payload:   req.Payload,
@@ -128,7 +128,7 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// Attempt to insert the task into the db
 		if err := srv.storage.InsertTask(&task); err != nil {
-			log.Printf("Failed to insert task for agent %s: %v", a.ID, err)
+			log.Printf("Failed to insert task for agent %s: %v", a.AgentID, err)
 			continue
 		}
 		count++

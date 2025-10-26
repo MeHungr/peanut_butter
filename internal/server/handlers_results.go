@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
 // ResultHandler allows sending the results from the agent to the server
@@ -108,9 +109,32 @@ func (srv *Server) GetResultsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	
+	// Parse query parameters
+	query := r.URL.Query()
+	filter := storage.AgentFilter{}
 
-	// optional ?agent_id= query parameter
-	agentID := r.URL.Query().Get("agent_id")
+	// ?all = true returns all agents
+	if query.Get("all") == "true" {
+		filter.All = true
+	}
+
+	// ?agent_id=123&agent_id=456
+	if ids, ok := query["agent_id"]; ok {
+		filter.IDs = ids
+	}
+
+	// ?os=linux&os=windows
+	if oses, ok := query["os"]; ok {
+		filter.OSes = oses
+	}
+
+	// ?status=active&status=inactive
+	if statuses, ok := query["status"]; ok {
+		filter.Statuses = statuses
+	}
+
+	// ?limit=10
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
 		http.Error(w, "Invalid query parameter 'limit': %w", http.StatusBadRequest)
@@ -118,7 +142,7 @@ func (srv *Server) GetResultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get results from db
-	results, err := srv.storage.GetResults(agentID, limit)
+	results, err := srv.storage.GetResults(filter, limit)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return

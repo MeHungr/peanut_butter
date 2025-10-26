@@ -44,7 +44,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 
 	// Marshals the agent's id into JSON
 	body, err := json.Marshal(map[string]string{
-		"agent_id": a.ID,
+		"agent_id": a.AgentID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal JSON: %w", err)
@@ -67,7 +67,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 		// If agent ID is unregistered, reregister
 		if strings.Contains(string(respBody), "Invalid agent ID") {
 			if a.Debug {
-				log.Printf("Agent ID %s no longer recognized, re-registering...", a.ID)
+				log.Printf("Agent ID %s no longer recognized, re-registering...", a.AgentID)
 			}
 			return nil, pberrors.ErrInvalidAgentID
 		} else { // Else, throw error for bad request

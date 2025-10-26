@@ -45,7 +45,7 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	agent := registerReq.Agent
 
 	// Validates that the agent ID is non-empty
-	if agent.ID == "" {
+	if agent.AgentID == "" {
 		http.Error(w, "No agent ID", http.StatusBadRequest)
 		return
 	}
@@ -54,13 +54,13 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now().UTC()
 	agent.LastSeen = &now
 
-	log.Printf("Registering agent with ID: %q\n", agent.ID)
+	log.Printf("Registering agent with ID: %q\n", agent.AgentID)
 
 	// Convert the api.Agent to a storage.Agent
 	storageAgent := apiToStorageAgent(agent)
 	// Attempt to register the agent with the db
 	if err := srv.storage.RegisterAgent(storageAgent); err != nil {
-		log.Printf("RegisterAgent failed for %s: %v\n", agent.ID, err)
+		log.Printf("RegisterAgent failed for %s: %v\n", agent.AgentID, err)
 		http.Error(w, "Failed to register agent", http.StatusInternalServerError)
 		return
 	}
@@ -75,5 +75,5 @@ func (srv *Server) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Agent: %s has registered\n", agent.ID)
+	log.Printf("Agent: %s has registered\n", agent.AgentID)
 }

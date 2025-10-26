@@ -25,7 +25,7 @@ const (
 
 // Agent represents a single registered agent in the C2
 type Agent struct {
-	ID               string        `json:"agent_id"`
+	AgentID          string        `json:"agent_id"`
 	OS               string        `json:"os,omitempty"`
 	Arch             string        `json:"arch,omitempty"`
 	Status           AgentStatus   `json:"status,omitempty"`
@@ -40,8 +40,8 @@ type Agent struct {
 
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
-	TaskID    int            `json:"task_id"`
-	AgentID   string         `json:"agent_id"`
+	TaskID    int `json:"task_id"`
+	Agent     `json:"agent"`
 	Type      TaskType       `json:"type"`
 	Completed bool           `json:"completed,omitempty"`
 	Payload   string         `json:"payload,omitempty"`

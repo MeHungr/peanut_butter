@@ -31,6 +31,7 @@ type ResultRow struct {
 	ResultID   string
 	TaskID     string
 	AgentID    string
+	AgentOS    string
 	Output     string
 	ReturnCode string
 	Payload    string
@@ -90,7 +91,7 @@ func RenderResults(rows []ResultRow, wide bool) {
 	tw.SetOutputMirror(os.Stdout)
 
 	// Create the header and append it to the table
-	header := table.Row{"AGENT ID", "TYPE", "PAYLOAD", "OUTPUT"}
+	header := table.Row{"AGENT ID", "OS/ARCH", "TYPE", "PAYLOAD", "OUTPUT"}
 	if wide {
 		header = append(header, "RETURN CODE", "RESULT ID", "TASK ID", "CREATED AT")
 	}
@@ -98,7 +99,7 @@ func RenderResults(rows []ResultRow, wide bool) {
 
 	// Create the rows and append them to the table
 	for _, r := range rows {
-		row := table.Row{r.AgentID, r.Type, r.Payload, r.Output}
+		row := table.Row{r.AgentID, r.AgentOS, r.Type, r.Payload, r.Output}
 		if wide {
 			row = append(row, r.ReturnCode, r.ResultID, r.TaskID, r.CreatedAt)
 		}

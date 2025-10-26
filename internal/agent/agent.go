@@ -29,7 +29,7 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 	}
 	return &Agent{
 		Agent: api.Agent{
-			ID:               id,
+			AgentID:               id,
 			AgentIP:          GetLocalIP(),
 			ServerIP:         serverIP,
 			ServerPort:       serverPort,
@@ -46,7 +46,7 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 // Start starts the agent and begins the main polling loop
 func (a *Agent) Start() {
 	if a.Debug {
-		log.Printf("Agent starting with ID: %s\n", a.ID)
+		log.Printf("Agent starting with ID: %s\n", a.AgentID)
 	}
 
 	// Attempt to register with the server until successful

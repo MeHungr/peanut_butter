@@ -29,7 +29,7 @@ ON CONFLICT(agent_id) DO UPDATE SET
 `
 	// Execute the query and replace ? with each variable
 	if _, err := s.DB.Exec(query,
-		agent.ID, agent.OS, agent.Arch, agent.Targeted,
+		agent.AgentID, agent.OS, agent.Arch, agent.Targeted,
 		agent.AgentIP, agent.ServerIP, agent.ServerPort,
 		agent.CallbackInterval, agent.Hostname,
 		agent.LastSeen,

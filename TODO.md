@@ -8,7 +8,7 @@
 - [x] Watch flag for list functions
 - [x] Make RegisterRequest struct
 - [x] Select all targets
-- [ ] Allow selecting targets by OS type
+- [x] Allow selecting targets by OS type
 - [ ] More verbose task status
 - [ ] Interactive shell?
 - [x] More verbose agent status
