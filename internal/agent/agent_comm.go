@@ -15,7 +15,7 @@ import (
 
 // Register allows the agent to register with the server
 func (a *Agent) Register() error {
-	agent := a.ToAPI()
+	agent := a.Agent
 	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 

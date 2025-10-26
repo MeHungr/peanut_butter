@@ -4,8 +4,6 @@ import (
 	"log"
 	"net"
 	"time"
-
-	"github.com/MeHungr/peanut-butter/internal/api"
 )
 
 // GetLocalIP returns the local ip of the agent
@@ -21,21 +19,6 @@ func GetLocalIP() string {
 		}
 	}
 	return "?.?.?.?"
-}
-
-// Converts the agent.Agent struct into an api.Agent
-func (a *Agent) ToAPI() api.Agent {
-	return api.Agent{
-		ID:               a.ID,
-		OS:               a.OS,
-		Arch:             a.Arch,
-		AgentIP:          a.AgentIP,
-		ServerIP:         a.ServerIP,
-		ServerPort:       a.ServerPort,
-		CallbackInterval: a.CallbackInterval,
-		Hostname:         a.Hostname,
-		LastSeen:         a.LastSeen,
-	}
 }
 
 // registerUntilDone has the agent attempt to register with the server until it is accepted

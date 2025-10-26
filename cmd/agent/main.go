@@ -12,7 +12,7 @@ func main() {
 	serverIP := "localhost"
 	serverPort := 8080
 	callbackInterval := 10 * time.Second
-	debugMode := true
+	debugMode := false
 	// ============================
 
 	// Constructs the agent and starts it
