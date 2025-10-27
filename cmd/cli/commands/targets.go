@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/cli"
 	"github.com/spf13/cobra"
 )
@@ -18,9 +19,32 @@ var targetsCmd = &cobra.Command{
 var targetsAddCmd = &cobra.Command{
 	Use:   "add <agent IDs>",
 	Short: "Add agents to the current target list",
-	Args:  cobra.MinimumNArgs(1),
+	Args: requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Client.AddTargets(args)
+		// Retrieve the all flag value
+		targetAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return fmt.Errorf("retrieving all flag: %w", err)
+		}
+
+		// Grab filter flags and create a filter
+		osFilter, err := cmd.Flags().GetStringSlice("os")
+		if err != nil {
+			return fmt.Errorf("retrieving os flag: %w", err)
+		}
+		
+		// Validate OS input
+		if err := validateOSInputs(osFilter); err != nil {
+			return fmt.Errorf("validating os: %w", err)
+		}
+
+		filter := api.AgentFilter{
+			All: targetAll,
+			IDs: args,
+			OSes: osFilter,
+		}
+
+		return Client.AddTargets(filter)
 	},
 }
 
@@ -47,16 +71,31 @@ var targetsListCmd = &cobra.Command{
 			return fmt.Errorf("error parsing interval: %w", err)
 		}
 
+		// Grab filter flags and create a filter
+		osFilter, err := cmd.Flags().GetStringSlice("os")
+		if err != nil {
+			return fmt.Errorf("retrieving os flag: %w", err)
+		}
+		
+		// Validate OS input
+		if err := validateOSInputs(osFilter); err != nil {
+			return fmt.Errorf("validating os: %w", err)
+		}
+
+		filter := api.AgentFilter{
+			OSes: osFilter,
+		}
+
 		// If watch is enabled, watch
 		if interval > 0 {
 			cli.Watch(interval, func() error {
-				return Client.Targets(wideFlag)
+				return Client.Targets(wideFlag, filter)
 			})
 			return nil
 		}
 
 		// Else, just print the table
-		return Client.Targets(wideFlag)
+		return Client.Targets(wideFlag, filter)
 	},
 }
 
@@ -64,9 +103,32 @@ var targetsListCmd = &cobra.Command{
 var targetsSetCmd = &cobra.Command{
 	Use:   "set <agent IDs>",
 	Short: "Set the current target list to the agents provided",
-	Args:  cobra.MinimumNArgs(1),
+	Args: requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Client.SetTargets(args)
+		// Retrieve the all flag value
+		targetAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return fmt.Errorf("retrieving all flag: %w", err)
+		}
+
+		// Grab filter flags and create a filter
+		osFilter, err := cmd.Flags().GetStringSlice("os")
+		if err != nil {
+			return fmt.Errorf("retrieving os flag: %w", err)
+		}
+		
+		// Validate OS input
+		if err := validateOSInputs(osFilter); err != nil {
+			return fmt.Errorf("validating os: %w", err)
+		}
+
+		filter := api.AgentFilter{
+			All: targetAll,
+			IDs: args,
+			OSes: osFilter,
+		}
+
+		return Client.SetTargets(filter)
 	},
 }
 
@@ -83,9 +145,32 @@ var targetsClearCmd = &cobra.Command{
 var targetsUntargetCmd = &cobra.Command{
 	Use:   "untarget <agent IDs>",
 	Short: "Untargets the specified agents",
-	Args:  cobra.MinimumNArgs(1),
+	Args: requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return Client.Untarget(args)
+		// Retrieve the all flag value
+		targetAll, err := cmd.Flags().GetBool("all")
+		if err != nil {
+			return fmt.Errorf("retriving all flag: %w", err)
+		}
+
+		// Grab filter flags and create a filter
+		osFilter, err := cmd.Flags().GetStringSlice("os")
+		if err != nil {
+			return fmt.Errorf("retrieving os flag: %w", err)
+		}
+		
+		// Validate OS input
+		if err := validateOSInputs(osFilter); err != nil {
+			return fmt.Errorf("validating os: %w", err)
+		}
+
+		filter := api.AgentFilter{
+			All: targetAll,
+			IDs: args,
+			OSes: osFilter,
+		}
+
+		return Client.Untarget(filter)
 	},
 }
 
@@ -98,7 +183,20 @@ func init() {
 	targetsCmd.AddCommand(targetsClearCmd)
 	targetsCmd.AddCommand(targetsUntargetCmd)
 
+	// ===== Flags =====
+	// OS flag
+	targetsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+	targetsAddCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+	targetsSetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+	targetsUntargetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+
+	// Rest
 	targetsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	targetsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
 	targetsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
+	targetsSetCmd.Flags().BoolP("all", "a", false, "Override individual IDs and set all agents to targeted")
+	targetsAddCmd.Flags().BoolP("all", "a", false, "Override individual IDs and set all agents to targeted")
+	targetsUntargetCmd.Flags().BoolP("all", "a", false, "Override individual IDs and set all agents to untargeted")
+	// =================
+
 }

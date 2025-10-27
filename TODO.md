@@ -6,9 +6,11 @@
 - [x] Disallow duplicate tasks and agents
 - [x] `pbctl agents` - change the way agents are displayed
 - [x] Watch flag for list functions
-- [ ] Select all targets
-- [ ] Allow selecting targets by OS type
+- [x] Make RegisterRequest struct
+- [x] Select all targets
+- [x] Allow selecting targets by OS type
 - [ ] More verbose task status
+- [ ] Interactive shell?
 - [x] More verbose agent status
 - [x] Add /results endpoint
 - [ ] Agent authentication

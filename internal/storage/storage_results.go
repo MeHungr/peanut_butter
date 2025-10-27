@@ -3,6 +3,9 @@ package storage
 import (
 	"fmt"
 	"log"
+	"strings"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // InsertResult inserts a result into the db
@@ -40,24 +43,38 @@ VALUES (?, ?, ?, ?)
 
 // GetResults returns results for all agents or a specific agent
 // An empty agentID will return results of all agents
-func (s *Storage) GetResults(agentID string, limit int) ([]Result, error) {
+func (s *Storage) GetResults(filter AgentFilter, limit int) ([]Result, error) {
 	// Initialize variables
-	var (
-		results []Result
-		// Allows for expansion
-		args []any
-	)
-	query := `
-SELECT r.result_id, r.agent_id, r.task_id, r.output, r.return_code, r.created_at, t.type, t.payload
+	var results []Result
+	base := `
+SELECT r.result_id, r.agent_id, r.task_id, r.output, r.return_code, r.created_at, t.type, t.payload, a.os
 FROM results r
 JOIN tasks t ON r.task_id = t.task_id
-`
+JOIN agents a ON r.agent_id = a.agent_id
+	`
+	var whereClause []string
+	var args []any
 
-	// If agentID is provided, modify the query to reflect that
-	if agentID != "" {
-		query += ` WHERE r.agent_id = ?`
-		// Make args expand to the agent id
-		args = append(args, agentID)
+	// If the filter is not searching for all agents
+	if !filter.All {
+		// If filtering by id
+		if len(filter.IDs) > 0 {
+			clause, idArgs, _ := sqlx.In("r.agent_id IN (?)", filter.IDs)
+			whereClause = append(whereClause, clause)
+			args = append(args, idArgs...)
+		}
+		// If filtering by OS
+		if len(filter.OSes) > 0 {
+			clause, osArgs, _ := sqlx.In("a.os IN (?)", filter.OSes)
+			whereClause = append(whereClause, clause)
+			args = append(args, osArgs...)
+		}
+	}
+
+	// Add the query filters to the base query
+	query := base
+	if len(whereClause) > 0 {
+		query += " WHERE " + strings.Join(whereClause, " AND ")
 	}
 
 	query += ` ORDER BY r.created_at DESC`

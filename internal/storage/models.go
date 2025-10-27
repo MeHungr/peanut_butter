@@ -9,7 +9,7 @@ import (
 
 // Agent represents a single registered agent in the C2
 type Agent struct {
-	ID               string        `db:"agent_id"`
+	AgentID          string        `db:"agent_id"`
 	OS               string        `db:"os"`
 	Arch             string        `db:"arch"`
 	Targeted         bool          `db:"targeted"`
@@ -25,6 +25,7 @@ type Agent struct {
 type Task struct {
 	TaskID    int            `db:"task_id"`
 	AgentID   string         `db:"agent_id"`
+	OS        string         `db:"os"`
 	Type      api.TaskType   `db:"type"`
 	Completed bool           `db:"completed"`
 	Payload   string         `db:"payload"`
@@ -37,6 +38,7 @@ type Result struct {
 	ResultID   int       `db:"result_id"`
 	TaskID     int       `db:"task_id"`
 	AgentID    string    `db:"agent_id"`
+	OS         string    `db:"os"`
 	Output     string    `db:"output"`
 	ReturnCode int       `db:"return_code"`
 	Type       string    `db:"type"`

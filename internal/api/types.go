@@ -15,9 +15,17 @@ const (
 	AgentStatusOffline AgentStatus = "offline"
 )
 
+// Defines the TaskType type (see below)
+type TaskType string
+
+// Defines the possible types of Tasks for Agents to use
+const (
+	Command TaskType = "command"
+)
+
 // Agent represents a single registered agent in the C2
 type Agent struct {
-	ID               string        `json:"agent_id"`
+	AgentID          string        `json:"agent_id"`
 	OS               string        `json:"os,omitempty"`
 	Arch             string        `json:"arch,omitempty"`
 	Status           AgentStatus   `json:"status,omitempty"`
@@ -30,18 +38,10 @@ type Agent struct {
 	LastSeen         *time.Time    `json:"last_seen,omitempty"`
 }
 
-// Defines the TaskType type (see below)
-type TaskType string
-
-// Defines the possible types of Tasks for Agents to use
-const (
-	Command TaskType = "command"
-)
-
 // Task represents a task for an agent to complete, served by the server
 type Task struct {
-	TaskID    int            `json:"task_id"`
-	AgentID   string         `json:"agent_id"`
+	TaskID    int `json:"task_id"`
+	Agent     `json:"agent"`
 	Type      TaskType       `json:"type"`
 	Completed bool           `json:"completed,omitempty"`
 	Payload   string         `json:"payload,omitempty"`
@@ -53,9 +53,21 @@ type Task struct {
 type Result struct {
 	ResultID   int `json:"result_id"`
 	Task       `json:"task"`
-	Output     string `json:"output"`
-	ReturnCode int    `json:"return_code"`
-	CreatedAt time.Time `json:"created_at"`
+	Output     string    `json:"output"`
+	ReturnCode int       `json:"return_code"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+type AgentFilter struct {
+	All      bool
+	IDs      []string
+	OSes     []string
+	Statuses []string
+}
+
+// RegisterRequest represents a request from the agent on the /register endpoint
+type RegisterRequest struct {
+	Agent *Agent `json:"agent"`
 }
 
 // GetAgentsResponse represents the response from the server on the /get-agents endpoint
@@ -66,7 +78,7 @@ type GetAgentsResponse struct {
 
 // AddTargetsRequest represents the request the agent sends on the /add-targets endpoint
 type TargetsRequest struct {
-	AgentIDs []string `json:"agents"`
+	AgentFilter
 }
 
 // GetTargetsResponse represents the response from the server on the /get-targets endpoint

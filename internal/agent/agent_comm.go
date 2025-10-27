@@ -15,12 +15,17 @@ import (
 
 // Register allows the agent to register with the server
 func (a *Agent) Register() error {
-	agent := a.ToAPI()
+	agent := a.Agent
 	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 
-	// POST request with agent as body, writes response to resp
-	if err := api.DoPost(a.Client, uri, agent, &resp); err != nil {
+	// Stores the agent in a RegisterRequest to send to the server
+	req := api.RegisterRequest{
+		Agent: &agent,
+	}
+
+	// POST request with the register request, writes response to resp
+	if err := api.DoPost(a.Client, uri, req, &resp); err != nil {
 		return fmt.Errorf("Register: %w", err)
 	}
 
@@ -39,7 +44,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 
 	// Marshals the agent's id into JSON
 	body, err := json.Marshal(map[string]string{
-		"agent_id": a.ID,
+		"agent_id": a.AgentID,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to marshal JSON: %w", err)
@@ -62,7 +67,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 		// If agent ID is unregistered, reregister
 		if strings.Contains(string(respBody), "Invalid agent ID") {
 			if a.Debug {
-				log.Printf("Agent ID %s no longer recognized, re-registering...", a.ID)
+				log.Printf("Agent ID %s no longer recognized, re-registering...", a.AgentID)
 			}
 			return nil, pberrors.ErrInvalidAgentID
 		} else { // Else, throw error for bad request

@@ -8,7 +8,7 @@ import (
 
 func apiToStorageAgent(a *api.Agent) *storage.Agent {
 	return &storage.Agent{
-		ID:               a.ID,
+		AgentID:          a.AgentID,
 		OS:               a.OS,
 		Arch:             a.Arch,
 		Targeted:         a.Targeted,
@@ -23,7 +23,7 @@ func apiToStorageAgent(a *api.Agent) *storage.Agent {
 
 func storageToAPIAgent(a *storage.Agent) *api.Agent {
 	return &api.Agent{
-		ID:               a.ID,
+		AgentID:          a.AgentID,
 		OS:               a.OS,
 		Arch:             a.Arch,
 		Status:           DeriveAgentStatus(*a.LastSeen, a.CallbackInterval),
@@ -40,7 +40,7 @@ func storageToAPIAgent(a *storage.Agent) *api.Agent {
 func storageToAPITask(t *storage.Task) *api.Task {
 	return &api.Task{
 		TaskID:    t.TaskID,
-		AgentID:   t.AgentID,
+		Agent:     api.Agent{AgentID: t.AgentID, OS: t.OS},
 		Type:      t.Type,
 		Completed: t.Completed,
 		Payload:   t.Payload,
@@ -53,6 +53,7 @@ func apiToStorageTask(t *api.Task) *storage.Task {
 	return &storage.Task{
 		TaskID:    t.TaskID,
 		AgentID:   t.AgentID,
+		OS:        t.OS,
 		Type:      t.Type,
 		Completed: t.Completed,
 		Payload:   t.Payload,
@@ -65,6 +66,7 @@ func apiToStorageResult(r *api.Result) *storage.Result {
 	return &storage.Result{
 		ResultID:   r.ResultID,
 		AgentID:    r.AgentID,
+		OS:         r.OS,
 		TaskID:     r.TaskID,
 		Output:     r.Output,
 		ReturnCode: r.ReturnCode,
@@ -77,7 +79,7 @@ func storageToAPIResult(r *storage.Result) *api.Result {
 		ResultID: r.ResultID,
 		Task: api.Task{
 			TaskID:  r.TaskID,
-			AgentID: r.AgentID,
+			Agent:   api.Agent{AgentID: r.AgentID, OS: r.OS},
 			Type:    api.TaskType(r.Type),
 			Payload: r.Payload,
 		},
@@ -93,4 +95,13 @@ func storagetoAPIResults(results []storage.Result) []*api.Result {
 		apiResults = append(apiResults, storageToAPIResult(&r))
 	}
 	return apiResults
+}
+
+func apiToStorageFilter(filter api.AgentFilter) storage.AgentFilter {
+	return storage.AgentFilter{
+		All:      filter.All,
+		IDs:      filter.IDs,
+		OSes:     filter.OSes,
+		Statuses: filter.Statuses,
+	}
 }

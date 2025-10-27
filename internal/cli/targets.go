@@ -3,15 +3,16 @@ package cli
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/ui"
 )
 
 // AddTargets makes agents targets of tasks
-func (client *Client) AddTargets(agentIDs []string) error {
+func (client *Client) AddTargets(filter api.AgentFilter) error {
 	uri := client.BaseURL + "/add-targets"
-	targets := api.TargetsRequest{AgentIDs: agentIDs}
+	targets := api.TargetsRequest{AgentFilter: filter}
 	var resp api.Message
 
 	if err := api.DoPost(client.HTTPClient, uri, targets, &resp); err != nil {
@@ -24,11 +25,37 @@ func (client *Client) AddTargets(agentIDs []string) error {
 }
 
 // getTargets retrieves the current targets from the server
-func (client *Client) getTargets() ([]*api.Agent, int, error) {
+func (client *Client) getTargets(filter api.AgentFilter) ([]*api.Agent, int, error) {
 	uri := client.BaseURL + "/get-targets"
 	var targetsResponse *api.GetTargetsResponse
 
-	if err := api.DoGet(client.HTTPClient, uri, &targetsResponse); err != nil {
+	// Create a url to add a query to
+	fullURL, err := url.Parse(uri)
+	if err != nil {
+		return nil, 0, fmt.Errorf("invalid base URL: %w", err)
+	}
+
+	// Create the query
+	query := fullURL.Query()
+
+	// Add query parameters
+	if filter.All {
+		query.Set("all", "true")
+	}
+	for _, id := range filter.IDs {
+		query.Add("id", id)
+	}
+	for _, os := range filter.OSes {
+		query.Add("os", os)
+	}
+	for _, status := range filter.Statuses {
+		query.Add("status", status)
+	}
+
+	// Encode the query into the url
+	fullURL.RawQuery = query.Encode()
+
+	if err := api.DoGet(client.HTTPClient, fullURL.String(), &targetsResponse); err != nil {
 		return nil, 0, fmt.Errorf("getTargets: %w", err)
 	}
 
@@ -36,8 +63,8 @@ func (client *Client) getTargets() ([]*api.Agent, int, error) {
 }
 
 // Targets lists the targets from getTargets in a user friendly format
-func (client *Client) Targets(wideFlag bool) error {
-	targets, count, err := client.getTargets()
+func (client *Client) Targets(wideFlag bool, filter api.AgentFilter) error {
+	targets, count, err := client.getTargets(filter)
 	if err != nil {
 		return err
 	}
@@ -55,10 +82,10 @@ func (client *Client) Targets(wideFlag bool) error {
 }
 
 // Untarget sets a list of agents as untargeted
-func (client *Client) Untarget(agentIDs []string) error {
+func (client *Client) Untarget(filter api.AgentFilter) error {
 	uri := client.BaseURL + "/untarget"
 	var resp api.Message
-	targets := api.TargetsRequest{AgentIDs: agentIDs}
+	targets := api.TargetsRequest{AgentFilter: filter}
 
 	if err := api.DoPost(client.HTTPClient, uri, targets, &resp); err != nil {
 		return fmt.Errorf("Untarget: %w", err)
@@ -84,9 +111,9 @@ func (client *Client) ClearTargets() error {
 }
 
 // SetTargets clears all targets then sets the provided agents as targets
-func (client *Client) SetTargets(agentIDs []string) error {
+func (client *Client) SetTargets(filter api.AgentFilter) error {
 	uri := client.BaseURL + "/set-targets"
-	targets := api.TargetsRequest{AgentIDs: agentIDs}
+	targets := api.TargetsRequest{AgentFilter: filter}
 	var resp api.Message
 
 	if err := api.DoRequest(client.HTTPClient, http.MethodPut, uri, targets, &resp); err != nil {

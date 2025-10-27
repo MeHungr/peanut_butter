@@ -18,6 +18,7 @@ func resultsToRows(results []*api.Result) []ui.ResultRow {
 			ResultID:   strconv.Itoa(r.ResultID),
 			TaskID:     strconv.Itoa(r.TaskID),
 			AgentID:    r.AgentID,
+			AgentOS:    r.OS,
 			Type:       string(r.Type),
 			Output:     r.Output,
 			Payload:    r.Payload,
@@ -30,24 +31,40 @@ func resultsToRows(results []*api.Result) []ui.ResultRow {
 }
 
 // getResults returns a list of results for all agents or a specified agent
-func (client *Client) getResults(agentID string, limit int) (*api.GetResultsResponse, error) {
+func (client *Client) getResults(filter api.AgentFilter, limit int) (*api.GetResultsResponse, error) {
 	uri := client.BaseURL + "/get-results"
 	var out api.GetResultsResponse
-	u, err := url.Parse(uri)
+
+	// Create a url to add a query to
+	fullURL, err := url.Parse(uri)
 	if err != nil {
 		return nil, fmt.Errorf("invalid base URL: %w", err)
 	}
 
-	q := u.Query()
-	if agentID != "" {
-		q.Set("agent_id", agentID)
+	// Create the query
+	query := fullURL.Query()
+
+	// Add query parameters
+	if filter.All {
+		query.Set("all", "true")
+	}
+	for _, id := range filter.IDs {
+		query.Add("agent_id", id)
+	}
+	for _, os := range filter.OSes {
+		query.Add("os", os)
+	}
+	for _, status := range filter.Statuses {
+		query.Add("status", status)
 	}
 	if limit > 0 {
-		q.Set("limit", strconv.Itoa(limit))
+		query.Set("limit", strconv.Itoa(limit))
 	}
-	u.RawQuery = q.Encode()
 
-	if err := api.DoGet(client.HTTPClient, u.String(), &out); err != nil {
+	// Encode the query into the url
+	fullURL.RawQuery = query.Encode()
+
+	if err := api.DoGet(client.HTTPClient, fullURL.String(), &out); err != nil {
 		return nil, fmt.Errorf("getResults: %w", err)
 	}
 
@@ -55,9 +72,9 @@ func (client *Client) getResults(agentID string, limit int) (*api.GetResultsResp
 }
 
 // Results lists the results of agent tasks
-func (client *Client) Results(agentID string, limit int, wideFlag bool) error {
+func (client *Client) Results(filter api.AgentFilter, limit int, wideFlag bool) error {
 	// Retrieves the list of results
-	resp, err := client.getResults(agentID, limit)
+	resp, err := client.getResults(filter, limit)
 	if err != nil {
 		return fmt.Errorf("Failed to get results: %w", err)
 	}
