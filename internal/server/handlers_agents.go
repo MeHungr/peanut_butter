@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/conversion"
 	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
@@ -51,7 +52,7 @@ func (srv *Server) GetAgentsHandler(w http.ResponseWriter, r *http.Request) {
 	var resp api.GetAgentsResponse
 	resp.Count = len(agents)
 	for _, a := range agents {
-		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
+		resp.Agents = append(resp.Agents, conversion.StorageToAPIAgent(&a))
 	}
 
 	// Encodes JSON and sends message

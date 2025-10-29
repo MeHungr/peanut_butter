@@ -24,7 +24,7 @@ func GetLocalIP() string {
 // registerUntilDone has the agent attempt to register with the server until it is accepted
 func (a *Agent) registerUntilDone() {
 	for {
-		if err := a.Register(); err != nil {
+		if err := a.comm.Register(a.Info, a.Debug); err != nil {
 			if a.Debug {
 				log.Println(err)
 			}

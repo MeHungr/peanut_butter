@@ -13,24 +13,28 @@ import (
 	"github.com/MeHungr/peanut-butter/internal/pberrors"
 )
 
+// HTTPTransport defines the struct for HTTP communication
+type HTTPTransport struct {
+	Client *http.Client
+}
+
 // Register allows the agent to register with the server
-func (a *Agent) Register() error {
-	agent := a.Agent
+func (h *HTTPTransport) Register(agent *api.Agent, debug bool) error {
 	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 
 	// Stores the agent in a RegisterRequest to send to the server
 	req := api.RegisterRequest{
-		Agent: &agent,
+		Agent: agent,
 	}
 
 	// POST request with the register request, writes response to resp
-	if err := api.DoPost(a.Client, uri, req, &resp); err != nil {
+	if err := api.DoPost(h.Client, uri, req, &resp); err != nil {
 		return fmt.Errorf("Register: %w", err)
 	}
 
 	// Print server response
-	if a.Debug {
+	if debug {
 		log.Println(resp.Message)
 	}
 
@@ -39,7 +43,7 @@ func (a *Agent) Register() error {
 
 // GetTask retrieves a task from the server to be executed
 // This function needs to handle its own response codes, so custom logic is needed
-func (a *Agent) GetTask() (*api.Task, error) {
+func (h *HTTPTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
 	url := fmt.Sprintf("http://%s:%d/task", a.ServerIP, a.ServerPort)
 
 	// Marshals the agent's id into JSON
@@ -51,7 +55,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 	}
 
 	// POST request with the agent's id as the body
-	resp, err := a.Post(url, "application/json", bytes.NewBuffer(body))
+	resp, err := h.Client.Post(url, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("Failed to send POST request: %w", err)
 	}
@@ -66,7 +70,7 @@ func (a *Agent) GetTask() (*api.Task, error) {
 	case http.StatusBadRequest:
 		// If agent ID is unregistered, reregister
 		if strings.Contains(string(respBody), "Invalid agent ID") {
-			if a.Debug {
+			if debug {
 				log.Printf("Agent ID %s no longer recognized, re-registering...", a.AgentID)
 			}
 			return nil, pberrors.ErrInvalidAgentID
@@ -85,12 +89,11 @@ func (a *Agent) GetTask() (*api.Task, error) {
 	default:
 		// Throw other errors
 		return nil, fmt.Errorf("Server returned status %d: %s", resp.StatusCode, string(respBody))
-
 	}
 }
 
 // SendResult sends a result from an agent to the server
-func (a *Agent) SendResult(result *api.Result) error {
+func (h *HTTPTransport) SendResult(a *api.Agent, result *api.Result, debug bool) error {
 	uri := fmt.Sprintf("http://%s:%d/result", a.ServerIP, a.ServerPort)
 	var resp api.Message
 
@@ -100,8 +103,8 @@ func (a *Agent) SendResult(result *api.Result) error {
 	}
 
 	// Send POST request with result, prints message if debug is on
-	if err := api.DoPost(a.Client, uri, result, &resp); err != nil {
-		if a.Debug {
+	if err := api.DoPost(h.Client, uri, result, &resp); err != nil {
+		if debug {
 			log.Println(resp.Message)
 		}
 	}

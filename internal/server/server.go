@@ -5,24 +5,38 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/storage"
-)
-
-var (
-	agents = make(map[string]*api.Agent)  // package level map that maps agent ids to agents
-	tasks  = make(map[string][]*api.Task) // package level map that maps agent ids to the agent's tasks
+	"github.com/MeHungr/peanut-butter/internal/transport"
+	srvtransport "github.com/MeHungr/peanut-butter/internal/transport/server"
 )
 
 type Server struct {
 	storage *storage.Storage
 	port    int
+	comm    *srvtransport.CommManager
 }
 
 func New(storage *storage.Storage, port int) *Server {
+	// CommManager
+	cm := &srvtransport.CommManager{
+		Storage:    storage,
+		Transports: make(map[transport.TransportString]srvtransport.Transport),
+		Agents:     make(map[string]srvtransport.Transport),
+	}
+
+	// Transports
+	httpTransport := &srvtransport.HTTPTransport{
+		Comm: cm,
+	}
+
+	// Add transports to map
+	cm.Transports[transport.HTTP] = httpTransport
+
+	// Return the server
 	return &Server{
 		storage: storage,
 		port:    port,
+		comm:    cm,
 	}
 }
 
@@ -32,12 +46,7 @@ func (srv *Server) Start() error {
 	// --------------------------------
 	// AGENT ENDPOINTS
 	// --------------------------------
-	// Defines the /register path and uses RegisterHandler to handle data
-	http.HandleFunc("/register", srv.RegisterHandler)
-	// Defines the /task path and uses TaskHandler to handle data
-	http.HandleFunc("/task", srv.TaskHandler)
-	// Defines the /result path and uses ResultHandler to handle data
-	http.HandleFunc("/result", srv.ResultHandler)
+	srv.comm.Transports[transport.HTTP].Start()
 
 	// --------------------------------
 	// CLI ENDPOINTS

@@ -1,5 +1,5 @@
 // This handles deriving the status of agents (online, stale, offline)
-package server
+package util
 
 import (
 	"time"

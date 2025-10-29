@@ -11,14 +11,13 @@ import (
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/pberrors"
+	agenttransport "github.com/MeHungr/peanut-butter/internal/transport/agent"
 )
 
-// Agent has an api.Agent embedded, and creates additional methods
-// and fields for use in the agent package
 type Agent struct {
-	api.Agent
+	Info  *api.Agent
 	Debug bool
-	*http.Client
+	comm  *agenttransport.CommManager
 }
 
 // New creates a new Agent with sensible defaults.
@@ -27,9 +26,15 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 	if err != nil {
 		hostname = "unknown"
 	}
+
+	// Initialize transports
+	httpTransport := &agenttransport.HTTPTransport{
+		Client: &http.Client{Timeout: 10 * time.Second},
+	}
+
 	return &Agent{
-		Agent: api.Agent{
-			AgentID:               id,
+		Info: &api.Agent{
+			AgentID:          id,
 			AgentIP:          GetLocalIP(),
 			ServerIP:         serverIP,
 			ServerPort:       serverPort,
@@ -38,15 +43,20 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 			OS:               runtime.GOOS,
 			Arch:             runtime.GOARCH,
 		},
-		Debug:  debug,
-		Client: &http.Client{Timeout: 10 * time.Second}, // good default
+		Debug: debug,
+		comm: &agenttransport.CommManager{
+			Transports: map[string]agenttransport.Transport{
+				"http": httpTransport,
+			},
+			Active: httpTransport,
+		},
 	}
 }
 
 // Start starts the agent and begins the main polling loop
 func (a *Agent) Start() {
 	if a.Debug {
-		log.Printf("Agent starting with ID: %s\n", a.AgentID)
+		log.Printf("Agent starting with ID: %s\n", a.Info.AgentID)
 	}
 
 	// Attempt to register with the server until successful
@@ -54,7 +64,7 @@ func (a *Agent) Start() {
 
 	// Main polling loop
 	for {
-		task, err := a.GetTask()
+		task, err := a.comm.GetTask(a.Info, a.Debug)
 		if err != nil {
 			if errors.Is(err, pberrors.ErrInvalidAgentID) {
 				a.registerUntilDone()
@@ -75,13 +85,13 @@ func (a *Agent) Start() {
 				}
 				continue
 			}
-			if err := a.SendResult(result); err != nil {
+			if err := a.comm.SendResult(a.Info, result, a.Debug); err != nil {
 				if a.Debug {
 					log.Println("SendResult error:", err)
 				}
 			}
 		}
 
-		time.Sleep(a.CallbackInterval)
+		time.Sleep(a.Info.CallbackInterval)
 	}
 }
