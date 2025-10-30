@@ -20,7 +20,7 @@ import (
 
 func main() {
 	// ========== Config ==========
-	serverPort := 80
+	serverPort := 8080
 	integration := true // 3rd party integrations
 	// ============================
 
