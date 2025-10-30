@@ -4,7 +4,9 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"time"
 
+	"github.com/MeHungr/peanut-butter/internal/integrations"
 	"github.com/MeHungr/peanut-butter/internal/storage"
 	"github.com/MeHungr/peanut-butter/internal/transport"
 	srvtransport "github.com/MeHungr/peanut-butter/internal/transport/server"
@@ -16,12 +18,26 @@ type Server struct {
 	comm    *srvtransport.CommManager
 }
 
-func New(storage *storage.Storage, port int) *Server {
+func New(storage *storage.Storage, port int, integration bool) *Server {
+	// Notifiers map
+	notifiersMap := make(map[integrations.NotifierString]integrations.Notifier)
+
+	// Pwnboard Notifier
+	pwnboardNotifier := &integrations.PwnboardNotifier{
+		PwnboardURL: "https://pwnboard.win/pwn",
+		Client:      &http.Client{Timeout: 10 * time.Second},
+	}
+
+	// Add pwnboard to notifiers map
+	notifiersMap[integrations.PWNBOARD] = pwnboardNotifier
+
 	// CommManager
 	cm := &srvtransport.CommManager{
-		Storage:    storage,
-		Transports: make(map[transport.TransportString]srvtransport.Transport),
-		Agents:     make(map[string]srvtransport.Transport),
+		Storage:     storage,
+		Transports:  make(map[transport.TransportString]srvtransport.Transport),
+		Agents:      make(map[string]srvtransport.Transport),
+		Notifiers:   notifiersMap,
+		Integration: integration,
 	}
 
 	// Transports

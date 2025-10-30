@@ -8,15 +8,18 @@ import (
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/conversion"
+	"github.com/MeHungr/peanut-butter/internal/integrations"
 	"github.com/MeHungr/peanut-butter/internal/pberrors"
 	"github.com/MeHungr/peanut-butter/internal/storage"
 	"github.com/MeHungr/peanut-butter/internal/transport"
 )
 
 type CommManager struct {
-	Transports map[transport.TransportString]Transport
-	Agents     map[string]Transport // agentID -> Transport
-	Storage    *storage.Storage     // db used by server
+	Transports  map[transport.TransportString]Transport
+	Agents      map[string]Transport // agentID -> Transport
+	Storage     *storage.Storage     // db used by server
+	Notifiers   map[integrations.NotifierString]integrations.Notifier
+	Integration bool
 }
 
 func (cm *CommManager) RegisterAgent(agent *api.Agent, t Transport) error {
@@ -58,6 +61,20 @@ func (cm *CommManager) SendTask(agent *api.Agent) (*api.Task, error) {
 	// If storageAgent is nil, no agent with the id exists
 	if storageAgent == nil {
 		return nil, fmt.Errorf("SendTask failed for %s: %w\n", agent.AgentID, err)
+	}
+
+	// After verifying the agent exists, optionally notify 3rd
+	// party integrations
+	if cm.Integration {
+		for _, integration := range cm.Notifiers {
+			payload := integrations.Payload{
+				AgentIP:     agent.AgentIP,
+				Application: "Peanut Butter C2",
+				AccessType:  "http beacon",
+			}
+			integration.SetPayload(payload)
+			integration.OnAgentCallback(agent)
+		}
 	}
 
 	// Update agent's last seen time to now

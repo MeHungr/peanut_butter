@@ -2,10 +2,11 @@
 // This can be run with no arguments to run in the foreground,
 // or, it accepts arguments for running as a service.
 // Valid arguments:
-// 		install
-// 		uninstall
-// 		start
-// 		stop
+//
+//	install
+//	uninstall
+//	start
+//	stop
 package main
 
 import (
@@ -20,6 +21,7 @@ import (
 func main() {
 	// ========== Config ==========
 	serverPort := 8080
+	integration := true // 3rd party integrations
 	// ============================
 
 	// Initialize the database
@@ -30,7 +32,7 @@ func main() {
 	defer db.DB.Close()
 
 	// Constructs the server and starts it
-	srv := server.New(db, serverPort)
+	srv := server.New(db, serverPort, integration)
 
 	// Create service wrapper and run as service
 	prg := &program{server: srv}
