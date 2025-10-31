@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS results (
 	task_id INTEGER NOT NULL,
 	agent_id TEXT NOT NULL,
 	output TEXT,
-	return_code INTEGER,
+	return_code TEXT,
 	created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	UNIQUE (task_id, agent_id),
 	FOREIGN KEY (task_id) REFERENCES tasks(task_id),

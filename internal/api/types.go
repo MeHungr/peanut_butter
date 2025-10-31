@@ -54,7 +54,7 @@ type Result struct {
 	ResultID   int `json:"result_id"`
 	Task       `json:"task"`
 	Output     string    `json:"output"`
-	ReturnCode int       `json:"return_code"`
+	ReturnCode string       `json:"return_code"`
 	CreatedAt  time.Time `json:"created_at"`
 }
 

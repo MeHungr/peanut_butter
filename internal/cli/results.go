@@ -22,7 +22,7 @@ func resultsToRows(results []*api.Result) []ui.ResultRow {
 			Type:       string(r.Type),
 			Output:     r.Output,
 			Payload:    r.Payload,
-			ReturnCode: strconv.Itoa(r.ReturnCode),
+			ReturnCode: r.ReturnCode,
 			CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 		rows = append(rows, resultRow)

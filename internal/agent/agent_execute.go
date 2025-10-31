@@ -7,6 +7,11 @@ import (
 	"github.com/MeHungr/peanut-butter/internal/api"
 )
 
+const (
+	CmdTimeout    = "command timed out"
+	FailedToStart = "command failed to start"
+)
+
 // ExecuteTask executes the task retrieved by GetTask
 func (a *Agent) ExecuteTask(task *api.Task) (*api.Result, error) {
 	if strings.TrimSpace(task.Payload) == "" {
