@@ -15,8 +15,10 @@ type Storage struct {
 
 // NewStorage creates a new Storage that contains a DB
 func NewStorage(path string) (*Storage, error) {
+	// Allow reading from db while being written to
+	dbOpenStr := fmt.Sprintf("file:%s?_journal_mode=WAL&busy_timeout=5000&_cache_size=10000", path)
 	// Open a connection to the DB
-	db, err := sqlx.Open("sqlite3", path)
+	db, err := sqlx.Open("sqlite3", dbOpenStr)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to open SQLite connection: %w", err)
 	}
