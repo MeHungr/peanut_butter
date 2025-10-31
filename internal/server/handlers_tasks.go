@@ -60,11 +60,12 @@ func (srv *Server) EnqueueHandler(w http.ResponseWriter, r *http.Request) {
 			dur := time.Duration(req.Timeout) * time.Second
 			task.Timeout = &dur
 		}
-		// Attempt to insert the task into the db
-		if err := srv.storage.InsertTask(&task); err != nil {
-			log.Printf("Failed to insert task for agent %s: %v", a.AgentID, err)
-			continue
-		}
+		// Attempt to insert the task into the db concurrently
+		go func(task storage.Task) {
+			if err := srv.storage.InsertTask(&task); err != nil {
+				log.Printf("Failed to insert task for agent %s: %v", a.AgentID, err)
+			}
+		}(task)
 		count++
 	}
 
