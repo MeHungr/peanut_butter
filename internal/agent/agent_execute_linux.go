@@ -49,5 +49,7 @@ func executeCommand(task *api.Task) (output string, returnCode string) {
 		return
 	}
 
+	// Success case
+	returnCode = strconv.Itoa(cmd.ProcessState.ExitCode())
 	return // Returns the named values in the function signature
 }

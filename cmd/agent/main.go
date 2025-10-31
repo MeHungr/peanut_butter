@@ -23,8 +23,8 @@ func main() {
 	agentID := agent.GetLocalIP()
 	serverIP := "localhost"
 	serverPort := 8080
-	callbackInterval := 120 * time.Second
-	debugMode := false
+	callbackInterval := 10 * time.Second
+	debugMode := true
 	// ============================
 
 	// Constructs the agent and starts it
