@@ -5,6 +5,7 @@
 
 **Peanut Butter** is a simple HTTP command-and-control (C2) framework built for red vs. blue team competitions and personal learning.
 It includes a server, agent, and CLI (`pbctl`) with SQLite-backed data persistence. Peanut Butter agents communicate with the server on a beaconing system by sending POST requests to various endpoints on a preconfigured callback interval.
+The C2 has an agent and server written for linux, windows, freebsd, and macos (untested).
 
 ## Features
 - SQLite storage with `agents`, `tasks`, and `results` tables
@@ -49,7 +50,7 @@ make # places binaries in <project root>/bin and installs the cli
 
 ## Usage
 ### Starting the server and agents
-Both the server and agent can now be installed as services on linux and windows.
+Both the server and agent can now be installed as services on linux, windows, macos, and freebsd.
 Simply add a subcommand when running the executable:
 ``` bash
 pbagent install   | pbserver install
