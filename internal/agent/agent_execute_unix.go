@@ -1,10 +1,11 @@
 // Contains the logic for executing commands in linux
-//go:build linux
+//go:build linux || darwin || freebsd
 
 package agent
 
 import (
 	"context"
+	"os"
 	"os/exec"
 	"strconv"
 
@@ -20,13 +21,19 @@ func executeCommand(task *api.Task) (output string, returnCode string) {
 		cancel context.CancelFunc
 	)
 
+	// Attempt to use bash; default to sh
+	shell := "/bin/sh"
+	if _, err := os.Stat("/bin/bash"); err == nil {
+		shell = "/bin/bash"
+	}
+
 	// If the task has a timeout duration, use it with the context
 	if task.Timeout != nil {
 		ctx, cancel = context.WithTimeout(context.Background(), *task.Timeout)
 		defer cancel()
-		cmd = exec.CommandContext(ctx, "bash", "-c", task.Payload)
+		cmd = exec.CommandContext(ctx, shell, "-c", task.Payload)
 	} else { // If the task has no timeout, just execute it
-		cmd = exec.Command("bash", "-c", task.Payload)
+		cmd = exec.Command(shell, "-c", task.Payload)
 	}
 
 	// Runs the command and captures stdout + stderr

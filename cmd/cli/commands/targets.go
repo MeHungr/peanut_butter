@@ -19,7 +19,7 @@ var targetsCmd = &cobra.Command{
 var targetsAddCmd = &cobra.Command{
 	Use:   "add <agent IDs>",
 	Short: "Add agents to the current target list",
-	Args: requireArgsUnlessFilter("all", "os"),
+	Args:  requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Retrieve the all flag value
 		targetAll, err := cmd.Flags().GetBool("all")
@@ -32,15 +32,15 @@ var targetsAddCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
-		
+
 		// Validate OS input
 		if err := validateOSInputs(osFilter); err != nil {
 			return fmt.Errorf("validating os: %w", err)
 		}
 
 		filter := api.AgentFilter{
-			All: targetAll,
-			IDs: args,
+			All:  targetAll,
+			IDs:  args,
 			OSes: osFilter,
 		}
 
@@ -76,7 +76,7 @@ var targetsListCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
-		
+
 		// Validate OS input
 		if err := validateOSInputs(osFilter); err != nil {
 			return fmt.Errorf("validating os: %w", err)
@@ -103,7 +103,7 @@ var targetsListCmd = &cobra.Command{
 var targetsSetCmd = &cobra.Command{
 	Use:   "set <agent IDs>",
 	Short: "Set the current target list to the agents provided",
-	Args: requireArgsUnlessFilter("all", "os"),
+	Args:  requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Retrieve the all flag value
 		targetAll, err := cmd.Flags().GetBool("all")
@@ -116,15 +116,15 @@ var targetsSetCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
-		
+
 		// Validate OS input
 		if err := validateOSInputs(osFilter); err != nil {
 			return fmt.Errorf("validating os: %w", err)
 		}
 
 		filter := api.AgentFilter{
-			All: targetAll,
-			IDs: args,
+			All:  targetAll,
+			IDs:  args,
 			OSes: osFilter,
 		}
 
@@ -145,7 +145,7 @@ var targetsClearCmd = &cobra.Command{
 var targetsUntargetCmd = &cobra.Command{
 	Use:   "untarget <agent IDs>",
 	Short: "Untargets the specified agents",
-	Args: requireArgsUnlessFilter("all", "os"),
+	Args:  requireArgsUnlessFilter("all", "os"),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Retrieve the all flag value
 		targetAll, err := cmd.Flags().GetBool("all")
@@ -158,15 +158,15 @@ var targetsUntargetCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
-		
+
 		// Validate OS input
 		if err := validateOSInputs(osFilter); err != nil {
 			return fmt.Errorf("validating os: %w", err)
 		}
 
 		filter := api.AgentFilter{
-			All: targetAll,
-			IDs: args,
+			All:  targetAll,
+			IDs:  args,
 			OSes: osFilter,
 		}
 
@@ -185,10 +185,10 @@ func init() {
 
 	// ===== Flags =====
 	// OS flag
-	targetsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
-	targetsAddCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
-	targetsSetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
-	targetsUntargetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+	targetsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, freebsd, darwin). Singular or comma separated list")
+	targetsAddCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, freebsd, darwin). Singular or comma separated list")
+	targetsSetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, freebsd, darwin). Singular or comma separated list")
+	targetsUntargetCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, freebsd, darwin). Singular or comma separated list")
 
 	// Rest
 	targetsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")

@@ -13,7 +13,7 @@ LDFLAGS := -s -w
 
 # Default build type (release)
 .PHONY: all
-all: clean linux-x64 linux-arm mac windows install
+all: clean linux-x64 linux-arm mac freebsd windows install
 
 # Default install prefix (Linux/macOS)
 PREFIX ?= $(HOME)/.local
@@ -59,9 +59,17 @@ linux-arm:
 .PHONY: mac
 mac:
 	@mkdir -p $(BINARY_DIR)/darwin_amd64
-	-GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbserver $(PKG_SERVER)
-	-GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbagent $(PKG_AGENT)
-	-GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbctl $(PKG_CLI)
+	GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbserver $(PKG_SERVER)
+	GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbagent $(PKG_AGENT)
+	GOOS=darwin GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/darwin_amd64/pbctl $(PKG_CLI)
+
+# FreeBSD install
+.PHONY: freebsd
+freebsd:
+	@mkdir -p $(BINARY_DIR)/darwin_amd64
+	GOOS=freebsd GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/freebsd_amd64/pbserver $(PKG_SERVER)
+	GOOS=freebsd GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/freebsd_amd64/pbagent $(PKG_AGENT)
+	GOOS=freebsd GOARCH=amd64 $(GO) build -trimpath -ldflags="$(LDFLAGS)" -o $(BINARY_DIR)/freebsd_amd64/pbctl $(PKG_CLI)
 
 # Windows install
 .PHONY: windows

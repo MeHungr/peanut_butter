@@ -21,7 +21,7 @@ import (
 func main() {
 	// ========== Config ==========
 	agentID := agent.GetLocalIP()
-	serverIP := "localhost"
+	serverIP := "10.1.1.104"
 	serverPort := 8080
 	callbackInterval := 10 * time.Second
 	debugMode := true
