@@ -62,15 +62,15 @@ make # places binaries in <project root>/bin and installs the cli
 Both the server and agent can now be installed as services on linux, windows, macos, and freebsd.
 Simply add a subcommand when running the executable:
 ``` bash
-pbagent install   | pbserver install
-pbagent uninstall | pbserver uninstall
-pbagent start     | pbserver start
-pbagent stop      | pbserver stop
+./pbagent install   | ./pbserver install
+./pbagent uninstall | ./pbserver uninstall
+./pbagent start     | ./pbserver start
+./pbagent stop      | ./pbserver stop
 ```
 To run the executables in the foreground, run them with no subcommands:
 ``` bash
-pbagent
-pbserver
+./pbagent
+./pbserver
 ```
 ### Interact using the CLI
 ``` bash
