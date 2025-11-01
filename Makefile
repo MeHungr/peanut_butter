@@ -18,24 +18,21 @@ all: clean linux-x64 linux-arm mac freebsd windows install
 # Default install prefix (Linux/macOS)
 PREFIX ?= $(HOME)/.local
 
-# -------- Dev builds (no stripping) --------
-.PHONY: dev
-dev: clean build-server build-agent build-cli
+# -------- TLS Certs --------
 
-.PHONY: build-server
-build-server:
-	@mkdir -p $(BINARY_DIR)
-	$(GO) build -o $(BINARY_DIR)/pbserver $(PKG_SERVER)
+.PHONY: build-certs
+build-certs: ca gen-server
 
-.PHONY: build-agent
-build-agent:
-	@mkdir -p $(BINARY_DIR)
-	$(GO) build -o $(BINARY_DIR)/pbagent $(PKG_AGENT)
+.PHONY: ca
+ca:
+	@openssl genrsa -out ca.key 4096
+	@openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt -subj "/CN=PNUTBR"
 
-.PHONY: build-cli
-build-cli:
-	@mkdir -p $(BINARY_DIR)
-	$(GO) build -o $(BINARY_DIR)/pbctl $(PKG_CLI)
+.PHONY: gen-server
+gen-server:
+	@openssl genrsa -out server.key 2048
+	@openssl req -new -key server.key -out server.csr -subj "/CN=server.local"
+	@openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
 
 # -------- Release builds (stripped) --------
 
