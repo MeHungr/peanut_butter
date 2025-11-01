@@ -8,6 +8,10 @@ PKG_CLI := ./cmd/cli
 HOSTOS := $(shell go env GOOS)
 HOSTARCH := $(shell go env GOARCH)
 
+SHELL :=  /bin/bash
+# Default server IP
+DEFAULT_IP := "127.0.0.1"
+
 # Release ldflags: strip symbol & DWARF, and trim paths
 LDFLAGS := -s -w
 
@@ -30,18 +34,26 @@ ca:
 
 .PHONY: gen-server
 gen-server:
-	@read -p "Enter server IP or hostname: " HOST; \
-	if [[ "$$HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$$ ]]; then \
-		SAN="IP:$$HOST"; \
-	else \
-		SAN="DNS:$$HOST"; \
-	fi; \
-	echo "Generating certificate for $$SAN..."; \
-	openssl genrsa -out server.key 2048; \
-	openssl req -new -key server.key -out server.csr -subj "/CN=$$HOST"; \
-	openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
-	-out server.crt -days 365 -sha256 \
-	-extfile <(printf "subjectAltName=DNS:localhost, $$SAN")
+	@bash -c '\
+		if [ -t 0 ]; then \
+			read -p "Enter server IP or hostname (default $(DEFAULT_IP)): " HOST; \
+			HOST=$${HOST:-$(DEFAULT_IP)}; \
+		else \
+			echo "Non-interactive mode detected, using default IP: $(DEFAULT_IP)"; \
+			HOST=$(DEFAULT_IP); \
+		fi; \
+		if [[ "$$HOST" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$$ ]]; then \
+			SAN="IP:$$HOST"; \
+		else \
+			SAN="DNS:$$HOST"; \
+		fi; \
+		echo "Generating certificate for $$SAN..."; \
+		openssl genrsa -out server.key 2048; \
+		openssl req -new -key server.key -out server.csr -subj "/CN=$$HOST"; \
+		openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial \
+		-out server.crt -days 365 -sha256 \
+		-extfile <(printf "subjectAltName=DNS:localhost, $$SAN"); \
+	'
 
 .PHONY: rotate-cert
 rotate-cert:
