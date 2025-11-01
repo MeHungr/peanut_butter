@@ -21,7 +21,7 @@ PREFIX ?= $(HOME)/.local
 # -------- TLS Certs --------
 
 .PHONY: build-certs
-build-certs: ca gen-server
+build-certs: ca gen-server rotate-cert
 
 .PHONY: ca
 ca:
@@ -33,6 +33,9 @@ gen-server:
 	@openssl genrsa -out server.key 2048
 	@openssl req -new -key server.key -out server.csr -subj "/CN=server.local"
 	@openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt -days 365
+
+.PHONY: rotate-cert
+rotate-cert:
 
 # -------- Release builds (stripped) --------
 
