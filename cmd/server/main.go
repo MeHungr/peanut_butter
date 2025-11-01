@@ -2,10 +2,11 @@
 // This can be run with no arguments to run in the foreground,
 // or, it accepts arguments for running as a service.
 // Valid arguments:
-// 		install
-// 		uninstall
-// 		start
-// 		stop
+//
+//	install
+//	uninstall
+//	start
+//	stop
 package main
 
 import (
@@ -19,7 +20,7 @@ import (
 
 func main() {
 	// ========== Config ==========
-	serverPort := 8080
+	serverPort := 80
 	// ============================
 
 	// Initialize the database
