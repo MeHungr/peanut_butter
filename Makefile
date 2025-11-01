@@ -36,6 +36,10 @@ gen-server:
 
 .PHONY: rotate-cert
 rotate-cert:
+	@awk 'NR==FNR{a = a $$0 "\n"; next} /var CACertPEM = \[\]byte\(`/ {print; printf "%s", a; print "`)" ; f=1; next} f && /`/{f=0; next} !f' ca.crt internal/agent/agent.go > internal/agent/agent.tmp && \
+	mv internal/agent/agent.tmp internal/agent/agent.go && \
+	echo "✅ Updated internal/agent/agent.go"
+
 
 # -------- Release builds (stripped) --------
 
