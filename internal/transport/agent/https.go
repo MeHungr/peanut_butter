@@ -20,7 +20,7 @@ type HTTPSTransport struct {
 
 // Register allows the agent to register with the server
 func (h *HTTPSTransport) Register(agent *api.Agent, debug bool) error {
-	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
+	uri := fmt.Sprintf("https://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 
 	// Stores the agent in a RegisterRequest to send to the server
@@ -44,7 +44,7 @@ func (h *HTTPSTransport) Register(agent *api.Agent, debug bool) error {
 // GetTask retrieves a task from the server to be executed
 // This function needs to handle its own response codes, so custom logic is needed
 func (h *HTTPSTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
-	url := fmt.Sprintf("http://%s:%d/task", a.ServerIP, a.ServerPort)
+	url := fmt.Sprintf("https://%s:%d/task", a.ServerIP, a.ServerPort)
 
 	// Marshals the agent's id into JSON
 	body, err := json.Marshal(map[string]string{
@@ -94,7 +94,7 @@ func (h *HTTPSTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
 
 // SendResult sends a result from an agent to the server
 func (h *HTTPSTransport) SendResult(a *api.Agent, result *api.Result, debug bool) error {
-	uri := fmt.Sprintf("http://%s:%d/result", a.ServerIP, a.ServerPort)
+	uri := fmt.Sprintf("https://%s:%d/result", a.ServerIP, a.ServerPort)
 	var resp api.Message
 
 	// Ensures result is not a nil pointer

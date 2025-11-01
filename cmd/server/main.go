@@ -20,7 +20,7 @@ import (
 
 func main() {
 	// ========== Config ==========
-	serverPort := 80
+	serverPort := 443
 	// ============================
 
 	// Initialize the database
@@ -33,7 +33,7 @@ func main() {
 	// Constructs the server and starts it
 	srv := server.New(db, serverPort)
 
-	// Create service wrapper and run as service
+	//Create service wrapper and run as service
 	prg := &program{server: srv}
 	svcConfig := getServiceConfig()
 

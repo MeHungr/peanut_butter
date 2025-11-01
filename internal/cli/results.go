@@ -64,7 +64,7 @@ func (client *Client) getResults(filter api.AgentFilter, limit int) (*api.GetRes
 	// Encode the query into the url
 	fullURL.RawQuery = query.Encode()
 
-	if err := api.DoGet(client.HTTPClient, fullURL.String(), &out); err != nil {
+	if err := api.DoGet(client.HTTPSClient, fullURL.String(), &out); err != nil {
 		return nil, fmt.Errorf("getResults: %w", err)
 	}
 

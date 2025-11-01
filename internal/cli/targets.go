@@ -15,7 +15,7 @@ func (client *Client) AddTargets(filter api.AgentFilter) error {
 	targets := api.TargetsRequest{AgentFilter: filter}
 	var resp api.Message
 
-	if err := api.DoPost(client.HTTPClient, uri, targets, &resp); err != nil {
+	if err := api.DoPost(client.HTTPSClient, uri, targets, &resp); err != nil {
 		return fmt.Errorf("AddTargets: %w", err)
 	}
 
@@ -55,7 +55,7 @@ func (client *Client) getTargets(filter api.AgentFilter) ([]*api.Agent, int, err
 	// Encode the query into the url
 	fullURL.RawQuery = query.Encode()
 
-	if err := api.DoGet(client.HTTPClient, fullURL.String(), &targetsResponse); err != nil {
+	if err := api.DoGet(client.HTTPSClient, fullURL.String(), &targetsResponse); err != nil {
 		return nil, 0, fmt.Errorf("getTargets: %w", err)
 	}
 
@@ -87,7 +87,7 @@ func (client *Client) Untarget(filter api.AgentFilter) error {
 	var resp api.Message
 	targets := api.TargetsRequest{AgentFilter: filter}
 
-	if err := api.DoPost(client.HTTPClient, uri, targets, &resp); err != nil {
+	if err := api.DoPost(client.HTTPSClient, uri, targets, &resp); err != nil {
 		return fmt.Errorf("Untarget: %w", err)
 	}
 
@@ -101,7 +101,7 @@ func (client *Client) ClearTargets() error {
 	uri := client.BaseURL + "/clear-targets"
 	var resp api.Message
 
-	if err := api.DoRequest(client.HTTPClient, http.MethodDelete, uri, nil, &resp); err != nil {
+	if err := api.DoRequest(client.HTTPSClient, http.MethodDelete, uri, nil, &resp); err != nil {
 		return fmt.Errorf("ClearTargets: %w", err)
 	}
 
@@ -116,7 +116,7 @@ func (client *Client) SetTargets(filter api.AgentFilter) error {
 	targets := api.TargetsRequest{AgentFilter: filter}
 	var resp api.Message
 
-	if err := api.DoRequest(client.HTTPClient, http.MethodPut, uri, targets, &resp); err != nil {
+	if err := api.DoRequest(client.HTTPSClient, http.MethodPut, uri, targets, &resp); err != nil {
 		return fmt.Errorf("SetTargets: %w", err)
 	}
 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
 	"github.com/MeHungr/peanut-butter/internal/storage"
 	"github.com/MeHungr/peanut-butter/internal/transport"
@@ -71,13 +73,22 @@ func (srv *Server) Start() error {
 	// Defines the /get-results path and sends results to the requester
 	http.HandleFunc("/get-results", requireLocalhost(srv.GetResultsHandler))
 
+	// Get server exe location
+	srvExe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("Failed to obtain server filepath: %v", err)
+	}
+
+	baseDir := filepath.Dir(srvExe)
+	certsDir := filepath.Join(baseDir, "certs")
+	certPath := filepath.Join(certsDir, "server.crt")
+	keyPath := filepath.Join(certsDir, "server.key")
+
 	// Starts the server
 	port := fmt.Sprintf(":%d", srv.port)
 	log.Printf("Starting HTTPS server on %s\n", port)
-	err := http.ListenAndServeTLS(port, "server.crt", "server.key", nil)
-
-	// Throws an error if the server fails to start
-	if err != nil {
+	if err := http.ListenAndServeTLS(port, certPath, keyPath, nil); err != nil {
+		// Throws an error if the server fails to start
 		return fmt.Errorf("Error: %w", err)
 	}
 

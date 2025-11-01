@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// ========== Config ==========
-	baseURL := "http://localhost:80"
+	baseURL := "https://localhost:443"
 	// ============================
 
 	// Constructs the client and executes the commands

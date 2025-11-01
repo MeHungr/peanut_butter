@@ -16,7 +16,7 @@ func (client *Client) EnqueueCommand(cmd string, timeoutSeconds int) error {
 		Timeout: timeoutSeconds,
 	}
 
-	if err := api.DoPost(client.HTTPClient, uri, req, &resp); err != nil {
+	if err := api.DoPost(client.HTTPSClient, uri, req, &resp); err != nil {
 		return fmt.Errorf("EnqueueCommand: %w", err)
 	}
 
