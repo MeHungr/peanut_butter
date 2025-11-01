@@ -61,7 +61,7 @@ Example:
 		if err != nil {
 			return fmt.Errorf("retrieving os flag: %w", err)
 		}
-		
+
 		// Validate OS input
 		if err := validateOSInputs(osFilter); err != nil {
 			return fmt.Errorf("validating os: %w", err)
@@ -92,7 +92,7 @@ func init() {
 	resultsCmd.AddCommand(resultsListCmd)
 
 	// ===== Flags =====
-	resultsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter results by OS type (accepted: linux, windows, darwin). Singular or comma separated list")
+	resultsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter results by OS type (accepted: linux, windows, freebsd, darwin). Singular or comma separated list")
 	resultsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	resultsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
 	resultsListCmd.Flags().IntP("limit", "l", 5, "Number of results to display (default 5, use 0 for all)")

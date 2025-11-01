@@ -3,8 +3,9 @@
 
 # Peanut Butter
 
-**Peanut Butter** is a simple HTTP command-and-control (C2) framework built for red vs. blue team competitions and personal learning.
+**Peanut Butter** is a simple HTTPS command-and-control (C2) framework built for red vs. blue team competitions and personal learning.
 It includes a server, agent, and CLI (`pbctl`) with SQLite-backed data persistence. Peanut Butter agents communicate with the server on a beaconing system by sending POST requests to various endpoints on a preconfigured callback interval.
+The C2 has an agent and server written for linux, windows, freebsd, and macos (untested).
 
 ## Features
 - SQLite storage with `agents`, `tasks`, and `results` tables
@@ -25,10 +26,13 @@ internal
 ├── agent # agent runtime
 ├── api # shared API types
 ├── cli # cli & server communication logic
+├── conversion # conversion between api and storage types
 ├── pberrors # errors used internally
 ├── server # HTTP handlers & server logic
 ├── storage # database access (SQLite + sqlx)
-└── ui # pretty-printing helpers
+├── transport # Defines interfaces and implementations for client-server communcation
+├── ui # pretty-printing helpers
+└── util # Utilities and helper functions
 ```
 
 ## Installation
@@ -42,25 +46,31 @@ cd peanut_butter
 - Set agentID, serverIP, serverPort, callbackInterval, and debugMode
 3. Edit `cmd/server/main.go`
 - Set port
-4. Build the binaries
+4. Edit `cmd/cli/main.go`
+- Set baseURL
+5. Generate server TLS certificates (AGENTS WILL NEED TO BE REBUILT AND REDEPLOYED AFTER RUNNING THIS)
+``` bash
+make build-certs
+```
+6. Build the binaries
 ``` bash
 make # places binaries in <project root>/bin and installs the cli
 ```
 
 ## Usage
 ### Starting the server and agents
-Both the server and agent can now be installed as services on linux and windows.
+Both the server and agent can now be installed as services on linux, windows, macos, and freebsd.
 Simply add a subcommand when running the executable:
 ``` bash
-pbagent install   | pbserver install
-pbagent uninstall | pbserver uninstall
-pbagent start     | pbserver start
-pbagent stop      | pbserver stop
+./pbagent install   | ./pbserver install
+./pbagent uninstall | ./pbserver uninstall
+./pbagent start     | ./pbserver start
+./pbagent stop      | ./pbserver stop
 ```
 To run the executables in the foreground, run them with no subcommands:
 ``` bash
-pbagent
-pbserver
+./pbagent
+./pbserver
 ```
 ### Interact using the CLI
 ``` bash

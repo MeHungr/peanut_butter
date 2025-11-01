@@ -2,10 +2,11 @@
 // This can be run with no arguments to run in the foreground,
 // or, it accepts arguments for running as a service.
 // Valid arguments:
-// 		install
-// 		uninstall
-// 		start
-// 		stop
+//
+//	install
+//	uninstall
+//	start
+//	stop
 package main
 
 import (
@@ -20,10 +21,10 @@ import (
 func main() {
 	// ========== Config ==========
 	agentID := agent.GetLocalIP()
-	serverIP := "localhost"
-	serverPort := 8080
+	serverIP := "10.1.1.104"
+	serverPort := 443
 	callbackInterval := 10 * time.Second
-	debugMode := false
+	debugMode := true
 	// ============================
 
 	// Constructs the agent and starts it

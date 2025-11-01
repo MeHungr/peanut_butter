@@ -1,12 +1,12 @@
-// Contains conversions between api and database structs
-package server
+package conversion
 
 import (
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/storage"
+	"github.com/MeHungr/peanut-butter/internal/util"
 )
 
-func apiToStorageAgent(a *api.Agent) *storage.Agent {
+func ApiToStorageAgent(a *api.Agent) *storage.Agent {
 	return &storage.Agent{
 		AgentID:          a.AgentID,
 		OS:               a.OS,
@@ -21,12 +21,12 @@ func apiToStorageAgent(a *api.Agent) *storage.Agent {
 	}
 }
 
-func storageToAPIAgent(a *storage.Agent) *api.Agent {
+func StorageToAPIAgent(a *storage.Agent) *api.Agent {
 	return &api.Agent{
 		AgentID:          a.AgentID,
 		OS:               a.OS,
 		Arch:             a.Arch,
-		Status:           DeriveAgentStatus(*a.LastSeen, a.CallbackInterval),
+		Status:           util.DeriveAgentStatus(*a.LastSeen, a.CallbackInterval),
 		Targeted:         a.Targeted,
 		AgentIP:          a.AgentIP,
 		ServerIP:         a.ServerIP,
@@ -37,7 +37,7 @@ func storageToAPIAgent(a *storage.Agent) *api.Agent {
 	}
 }
 
-func storageToAPITask(t *storage.Task) *api.Task {
+func StorageToAPITask(t *storage.Task) *api.Task {
 	return &api.Task{
 		TaskID:    t.TaskID,
 		Agent:     api.Agent{AgentID: t.AgentID, OS: t.OS},
@@ -49,7 +49,7 @@ func storageToAPITask(t *storage.Task) *api.Task {
 	}
 }
 
-func apiToStorageTask(t *api.Task) *storage.Task {
+func ApiToStorageTask(t *api.Task) *storage.Task {
 	return &storage.Task{
 		TaskID:    t.TaskID,
 		AgentID:   t.AgentID,
@@ -62,7 +62,7 @@ func apiToStorageTask(t *api.Task) *storage.Task {
 	}
 }
 
-func apiToStorageResult(r *api.Result) *storage.Result {
+func ApiToStorageResult(r *api.Result) *storage.Result {
 	return &storage.Result{
 		ResultID:   r.ResultID,
 		AgentID:    r.AgentID,
@@ -74,7 +74,7 @@ func apiToStorageResult(r *api.Result) *storage.Result {
 	}
 }
 
-func storageToAPIResult(r *storage.Result) *api.Result {
+func StorageToAPIResult(r *storage.Result) *api.Result {
 	return &api.Result{
 		ResultID: r.ResultID,
 		Task: api.Task{
@@ -89,15 +89,15 @@ func storageToAPIResult(r *storage.Result) *api.Result {
 	}
 }
 
-func storagetoAPIResults(results []storage.Result) []*api.Result {
+func StoragetoAPIResults(results []storage.Result) []*api.Result {
 	apiResults := make([]*api.Result, 0, len(results))
 	for _, r := range results {
-		apiResults = append(apiResults, storageToAPIResult(&r))
+		apiResults = append(apiResults, StorageToAPIResult(&r))
 	}
 	return apiResults
 }
 
-func apiToStorageFilter(filter api.AgentFilter) storage.AgentFilter {
+func ApiToStorageFilter(filter api.AgentFilter) storage.AgentFilter {
 	return storage.AgentFilter{
 		All:      filter.All,
 		IDs:      filter.IDs,

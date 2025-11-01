@@ -3,26 +3,43 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 
-	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/storage"
-)
-
-var (
-	agents = make(map[string]*api.Agent)  // package level map that maps agent ids to agents
-	tasks  = make(map[string][]*api.Task) // package level map that maps agent ids to the agent's tasks
+	"github.com/MeHungr/peanut-butter/internal/transport"
+	srvtransport "github.com/MeHungr/peanut-butter/internal/transport/server"
 )
 
 type Server struct {
 	storage *storage.Storage
 	port    int
+	comm    *srvtransport.CommManager
 }
 
 func New(storage *storage.Storage, port int) *Server {
+	// CommManager
+	cm := &srvtransport.CommManager{
+		Storage:    storage,
+		Transports: make(map[transport.TransportString]srvtransport.Transport),
+		Agents:     make(map[string]srvtransport.Transport),
+	}
+
+	// Transports
+	httpsTransport := &srvtransport.HTTPSTransport{
+		Comm: cm,
+	}
+
+	// Add transports to map
+	cm.Transports[transport.HTTPS] = httpsTransport
+
+	// Return the server
 	return &Server{
 		storage: storage,
 		port:    port,
+		comm:    cm,
 	}
 }
 
@@ -32,12 +49,7 @@ func (srv *Server) Start() error {
 	// --------------------------------
 	// AGENT ENDPOINTS
 	// --------------------------------
-	// Defines the /register path and uses RegisterHandler to handle data
-	http.HandleFunc("/register", srv.RegisterHandler)
-	// Defines the /task path and uses TaskHandler to handle data
-	http.HandleFunc("/task", srv.TaskHandler)
-	// Defines the /result path and uses ResultHandler to handle data
-	http.HandleFunc("/result", srv.ResultHandler)
+	srv.comm.Transports[transport.HTTPS].Start()
 
 	// --------------------------------
 	// CLI ENDPOINTS
@@ -61,12 +73,22 @@ func (srv *Server) Start() error {
 	// Defines the /get-results path and sends results to the requester
 	http.HandleFunc("/get-results", requireLocalhost(srv.GetResultsHandler))
 
+	// Get server exe location
+	srvExe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("Failed to obtain server filepath: %v", err)
+	}
+
+	baseDir := filepath.Dir(srvExe)
+	certsDir := filepath.Join(baseDir, "certs")
+	certPath := filepath.Join(certsDir, "server.crt")
+	keyPath := filepath.Join(certsDir, "server.key")
+
 	// Starts the server
 	port := fmt.Sprintf(":%d", srv.port)
-	err := http.ListenAndServe(port, nil)
-
-	// Throws an error if the server fails to start
-	if err != nil {
+	log.Printf("Starting HTTPS server on %s\n", port)
+	if err := http.ListenAndServeTLS(port, certPath, keyPath, nil); err != nil {
+		// Throws an error if the server fails to start
 		return fmt.Errorf("Error: %w", err)
 	}
 

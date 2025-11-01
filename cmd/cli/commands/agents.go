@@ -69,6 +69,6 @@ func init() {
 	agentsListCmd.Flags().BoolP("wide", "w", false, "Show more columns in the table")
 	agentsListCmd.Flags().StringP("watch", "W", "", "Refresh the table periodically (default 2s if no value). Accepts durations like '5', '5s', '500ms'.")
 	agentsListCmd.Flags().Lookup("watch").NoOptDefVal = "2s"
-	agentsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, mac). Singular or comma separated list")
+	agentsListCmd.Flags().StringSliceP("os", "o", []string{}, "Filter or target by OS type (accepted: linux, windows, freebsd, mac). Singular or comma separated list")
 
 }

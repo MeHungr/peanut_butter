@@ -2,9 +2,11 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/MeHungr/peanut-butter/internal/api"
-	"github.com/MeHungr/peanut-butter/internal/storage"
 	"net/http"
+
+	"github.com/MeHungr/peanut-butter/internal/api"
+	"github.com/MeHungr/peanut-butter/internal/conversion"
+	"github.com/MeHungr/peanut-butter/internal/storage"
 )
 
 // GetTargetsHandler returns the list of targeted agents
@@ -50,7 +52,7 @@ func (srv *Server) GetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 	var resp api.GetAgentsResponse
 	resp.Count = len(agents)
 	for _, a := range agents {
-		resp.Agents = append(resp.Agents, storageToAPIAgent(&a))
+		resp.Agents = append(resp.Agents, conversion.StorageToAPIAgent(&a))
 	}
 
 	// Encodes JSON and sends message
@@ -87,7 +89,7 @@ func (srv *Server) AddTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case false:
 		// Adds the requested agents as targets
-		if err := srv.storage.AddTargets(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
+		if err := srv.storage.AddTargets(conversion.ApiToStorageFilter(reqBody.AgentFilter)); err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}
@@ -124,7 +126,7 @@ func (srv *Server) UntargetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Untarget the provided agents
-	if err := srv.storage.Untarget(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
+	if err := srv.storage.Untarget(conversion.ApiToStorageFilter(reqBody.AgentFilter)); err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
@@ -193,7 +195,7 @@ func (srv *Server) SetTargetsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	case false:
 		// Clear all, then set specified targets
-		if err := srv.storage.SetTargets(apiToStorageFilter(reqBody.AgentFilter)); err != nil {
+		if err := srv.storage.SetTargets(conversion.ApiToStorageFilter(reqBody.AgentFilter)); err != nil {
 			http.Error(w, "Database error", http.StatusInternalServerError)
 			return
 		}

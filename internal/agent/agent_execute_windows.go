@@ -6,17 +6,13 @@ package agent
 import (
 	"context"
 	"os/exec"
+	"strconv"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 )
 
-const (
-	ExitTimeout  = -1
-	ExitStartErr = -2
-)
-
 // executeCommand takes a task and returns the output and returnCode of the command after executing
-func executeCommand(task *api.Task) (output string, returnCode int) {
+func executeCommand(task *api.Task) (output string, returnCode string) {
 	// Initializes an empty context and cmd
 	var (
 		cmd    *exec.Cmd
@@ -39,22 +35,21 @@ func executeCommand(task *api.Task) (output string, returnCode int) {
 
 	// Check if the context timed out
 	if task.Timeout != nil && ctx.Err() == context.DeadlineExceeded {
-		output += "\nCommand timed out!"
-		returnCode = ExitTimeout
+		returnCode = CmdTimeout
 		return
 	}
 
 	// If the command failed for another reason
 	if err != nil {
 		if cmd.ProcessState != nil {
-			returnCode = cmd.ProcessState.ExitCode()
+			returnCode = strconv.Itoa(cmd.ProcessState.ExitCode())
 		} else {
-			returnCode = ExitStartErr // Failed to start process
+			returnCode = FailedToStart // Failed to start process
 		}
 		return
 	}
 
 	// Success case
-	returnCode = 0
+	returnCode = strconv.Itoa(cmd.ProcessState.ExitCode())
 	return // Returns the named values in the function signature
 }

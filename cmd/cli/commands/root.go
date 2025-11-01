@@ -17,6 +17,7 @@ var Client *cli.Client
 var validOSSet = map[string]struct{}{
 	"windows": {},
 	"linux":   {},
+	"freebsd": {},
 	"darwin":  {},
 }
 

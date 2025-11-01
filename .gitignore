@@ -2,3 +2,9 @@
 *.log
 *.db
 bin/**
+ca.crt
+ca.key
+ca.srl
+server.csr
+server.crt
+server.key

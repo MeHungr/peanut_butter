@@ -22,7 +22,7 @@ func resultsToRows(results []*api.Result) []ui.ResultRow {
 			Type:       string(r.Type),
 			Output:     r.Output,
 			Payload:    r.Payload,
-			ReturnCode: strconv.Itoa(r.ReturnCode),
+			ReturnCode: r.ReturnCode,
 			CreatedAt:  r.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 		rows = append(rows, resultRow)
@@ -64,7 +64,7 @@ func (client *Client) getResults(filter api.AgentFilter, limit int) (*api.GetRes
 	// Encode the query into the url
 	fullURL.RawQuery = query.Encode()
 
-	if err := api.DoGet(client.HTTPClient, fullURL.String(), &out); err != nil {
+	if err := api.DoGet(client.HTTPSClient, fullURL.String(), &out); err != nil {
 		return nil, fmt.Errorf("getResults: %w", err)
 	}
 

@@ -40,7 +40,7 @@ type Result struct {
 	AgentID    string    `db:"agent_id"`
 	OS         string    `db:"os"`
 	Output     string    `db:"output"`
-	ReturnCode int       `db:"return_code"`
+	ReturnCode string    `db:"return_code"`
 	Type       string    `db:"type"`
 	Payload    string    `db:"payload"`
 	CreatedAt  time.Time `db:"created_at"`
