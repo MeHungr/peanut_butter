@@ -13,13 +13,13 @@ import (
 	"github.com/MeHungr/peanut-butter/internal/pberrors"
 )
 
-// HTTPTransport defines the struct for HTTP communication
-type HTTPTransport struct {
+// HTTPSTransport defines the struct for HTTPS communication
+type HTTPSTransport struct {
 	Client *http.Client
 }
 
 // Register allows the agent to register with the server
-func (h *HTTPTransport) Register(agent *api.Agent, debug bool) error {
+func (h *HTTPSTransport) Register(agent *api.Agent, debug bool) error {
 	uri := fmt.Sprintf("http://%s:%d/register", agent.ServerIP, agent.ServerPort)
 	var resp api.Message
 
@@ -43,7 +43,7 @@ func (h *HTTPTransport) Register(agent *api.Agent, debug bool) error {
 
 // GetTask retrieves a task from the server to be executed
 // This function needs to handle its own response codes, so custom logic is needed
-func (h *HTTPTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
+func (h *HTTPSTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
 	url := fmt.Sprintf("http://%s:%d/task", a.ServerIP, a.ServerPort)
 
 	// Marshals the agent's id into JSON
@@ -93,7 +93,7 @@ func (h *HTTPTransport) GetTask(a *api.Agent, debug bool) (*api.Task, error) {
 }
 
 // SendResult sends a result from an agent to the server
-func (h *HTTPTransport) SendResult(a *api.Agent, result *api.Result, debug bool) error {
+func (h *HTTPSTransport) SendResult(a *api.Agent, result *api.Result, debug bool) error {
 	uri := fmt.Sprintf("http://%s:%d/result", a.ServerIP, a.ServerPort)
 	var resp api.Message
 

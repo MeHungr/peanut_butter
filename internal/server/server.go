@@ -3,6 +3,7 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/MeHungr/peanut-butter/internal/storage"
@@ -25,12 +26,12 @@ func New(storage *storage.Storage, port int) *Server {
 	}
 
 	// Transports
-	httpTransport := &srvtransport.HTTPTransport{
+	httpsTransport := &srvtransport.HTTPSTransport{
 		Comm: cm,
 	}
 
 	// Add transports to map
-	cm.Transports[transport.HTTP] = httpTransport
+	cm.Transports[transport.HTTPS] = httpsTransport
 
 	// Return the server
 	return &Server{
@@ -46,7 +47,7 @@ func (srv *Server) Start() error {
 	// --------------------------------
 	// AGENT ENDPOINTS
 	// --------------------------------
-	srv.comm.Transports[transport.HTTP].Start()
+	srv.comm.Transports[transport.HTTPS].Start()
 
 	// --------------------------------
 	// CLI ENDPOINTS
@@ -72,7 +73,8 @@ func (srv *Server) Start() error {
 
 	// Starts the server
 	port := fmt.Sprintf(":%d", srv.port)
-	err := http.ListenAndServe(port, nil)
+	log.Printf("Starting HTTPS server on %s\n", port)
+	err := http.ListenAndServeTLS(port, "server.crt", "server.key", nil)
 
 	// Throws an error if the server fails to start
 	if err != nil {

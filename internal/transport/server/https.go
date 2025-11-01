@@ -11,12 +11,12 @@ import (
 	"github.com/MeHungr/peanut-butter/internal/pberrors"
 )
 
-type HTTPTransport struct {
+type HTTPSTransport struct {
 	Comm *CommManager
 	port int
 }
 
-func (h *HTTPTransport) Start() error {
+func (h *HTTPSTransport) Start() error {
 	// Defines the /register path and uses RegisterHandler to handle data
 	http.HandleFunc("/register", h.RegisterHandler)
 	// Defines the /task path and uses TaskHandler to handle data
@@ -28,23 +28,23 @@ func (h *HTTPTransport) Start() error {
 }
 
 // HandleResult implements ServerTransport.
-func (h *HTTPTransport) HandleResult(r *api.Result) error {
+func (h *HTTPSTransport) HandleResult(r *api.Result) error {
 	return h.Comm.HandleResult(r)
 }
 
 // RegisterAgent implements ServerTransport.
-func (h *HTTPTransport) RegisterAgent(a *api.Agent) error {
+func (h *HTTPSTransport) RegisterAgent(a *api.Agent) error {
 	return h.Comm.RegisterAgent(a, h)
 }
 
 // SendTask implements ServerTransport.
-func (h *HTTPTransport) SendTask(t *api.Task) (*api.Task, error) {
+func (h *HTTPSTransport) SendTask(t *api.Task) (*api.Task, error) {
 	return t, nil
 }
 
 // RegisterHandler handles the registration of an agent to the server
 // The /register endpoint expects an RegisterRequest in a POST body
-func (h *HTTPTransport) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPSTransport) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST. This is the only allowed method
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -103,7 +103,7 @@ func (h *HTTPTransport) RegisterHandler(w http.ResponseWriter, r *http.Request) 
 
 // TaskHandler handles the distribution of tasks to agents
 // The /task endpoint expects an agent_id in a POST request
-func (h *HTTPTransport) TaskHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPSTransport) TaskHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -145,7 +145,7 @@ func (h *HTTPTransport) TaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // ResultHandler allows sending the results from the agent to the server
-func (h *HTTPTransport) ResultHandler(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPSTransport) ResultHandler(w http.ResponseWriter, r *http.Request) {
 	// Check that the HTTP method is POST
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

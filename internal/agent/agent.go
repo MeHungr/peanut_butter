@@ -2,6 +2,8 @@
 package agent
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"log"
 	"net/http"
@@ -14,10 +16,33 @@ import (
 	agenttransport "github.com/MeHungr/peanut-butter/internal/transport/agent"
 )
 
+// CACertPEM is the certificate from the CA used by the server
+var CACertPEM = []byte(`
+`)
+
+// Agent represents the agent
 type Agent struct {
 	Info  *api.Agent
 	Debug bool
 	comm  *agenttransport.CommManager
+}
+
+// NewHTTPSClient creates a new client for secure HTTPS communication
+func NewHTTPSClient() *http.Client {
+	pool := x509.NewCertPool()
+	pool.AppendCertsFromPEM(CACertPEM)
+
+	tlsConfig := &tls.Config{
+		RootCAs:    pool,
+		MinVersion: tls.VersionTLS12,
+	}
+
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+		Timeout: 10 * time.Second,
+	}
 }
 
 // New creates a new Agent with sensible defaults.
@@ -28,9 +53,7 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 	}
 
 	// Initialize transports
-	httpTransport := &agenttransport.HTTPTransport{
-		Client: &http.Client{Timeout: 10 * time.Second},
-	}
+	httpsTransport := &agenttransport.HTTPSTransport{Client: NewHTTPSClient()}
 
 	return &Agent{
 		Info: &api.Agent{
@@ -46,9 +69,9 @@ func New(id, serverIP string, serverPort int, callbackInterval time.Duration, de
 		Debug: debug,
 		comm: &agenttransport.CommManager{
 			Transports: map[string]agenttransport.Transport{
-				"http": httpTransport,
+				"https": httpsTransport,
 			},
-			Active: httpTransport,
+			Active: httpsTransport,
 		},
 	}
 }
