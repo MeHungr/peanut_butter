@@ -1,8 +1,10 @@
 package server
 
 import (
+	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 	"time"
 
@@ -59,6 +61,20 @@ func (cm *CommManager) SendTask(agent *api.Agent) (*api.Task, error) {
 	if storageAgent == nil {
 		return nil, fmt.Errorf("SendTask failed for %s: %w\n", agent.AgentID, err)
 	}
+
+	// ======PWNBOARD======
+	url := "https://www.pwnboard.win/pwn"
+	jsonStr := fmt.Appendf(nil, `{"ip":"%s","application":"Peanut Butter C2","access_type":"HTTPS Beacon"}`, agent.AgentIP)
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer <ACCESS TOKEN GENERATED IN /manage_apps>")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Error with pwnboard request: %v", err)
+	}
+	defer resp.Body.Close()
+	// ======PWNBOARD======
 
 	// Update agent's last seen time to now
 	now := time.Now().UTC()
