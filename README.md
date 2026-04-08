@@ -48,11 +48,15 @@ cd peanut_butter
 - Set port
 4. Edit `cmd/cli/main.go`
 - Set baseURL
-5. Generate server TLS certificates (AGENTS WILL NEED TO BE REBUILT AND REDEPLOYED AFTER RUNNING THIS)
+5. Modify `internal/transport/server/comm_manager.go`
+- Find the comment referring to PWNBOARD
+- Change the pwnboard url
+- Update auth token
+6. Generate server TLS certificates (AGENTS WILL NEED TO BE REBUILT AND REDEPLOYED AFTER RUNNING THIS)
 ``` bash
 make build-certs
 ```
-6. Build the binaries
+7. Build the binaries
 ``` bash
 make # places binaries in <project root>/bin and installs the cli
 ```
