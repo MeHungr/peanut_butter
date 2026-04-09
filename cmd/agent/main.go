@@ -21,10 +21,10 @@ import (
 func main() {
 	// ========== Config ==========
 	agentID := agent.GetLocalIP()
-	serverIP := "10.1.1.104"
+	serverIP := "192.168.10.168"
 	serverPort := 443
-	callbackInterval := 10 * time.Second
-	debugMode := true
+	callbackInterval := 5 * time.Minute
+	debugMode := false
 	// ============================
 
 	// Constructs the agent and starts it
