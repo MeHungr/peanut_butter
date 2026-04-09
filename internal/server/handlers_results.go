@@ -43,9 +43,14 @@ func (srv *Server) GetResultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ?limit=10
-	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = "0"
+	}
+
+	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		http.Error(w, "Invalid query parameter 'limit': %w", http.StatusBadRequest)
+		http.Error(w, "Invalid query parameter 'limit': %v", http.StatusBadRequest)
 		return
 	}
 
