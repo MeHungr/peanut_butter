@@ -33,7 +33,6 @@
         enabled: yes
         state: restarted
         daemon_reload: yes
-        exec_start: /usr/local/bin/networkd-helper
 
 # -----------------------
 # pfSense / FreeBSD hosts
