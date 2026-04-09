@@ -16,6 +16,7 @@ func GetLocalIP() string {
 	rePriority := []*regexp.Regexp{
 		regexp.MustCompile(`^10\.(\d+)\.1\.10$`),
 		regexp.MustCompile(`^10\.(\d+)\.1\.40$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.20$`),
 		regexp.MustCompile(`^10\.(\d+)\.1\.30$`),
 		regexp.MustCompile(`^10\.(\d+)\.1\.60$`),
 		regexp.MustCompile(`^10\.(\d+)\.1\.70$`),
