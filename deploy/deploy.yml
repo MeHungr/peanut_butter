@@ -66,6 +66,12 @@
         state: stopped
       ignore_errors: yes  # in case service doesn't exist yet
 
+    - name: Remove leftover file/dir if present
+      ansible.windows.win_file:
+        path: 'C:\Program Files\Windows Device management\wdm.exe'
+        state: absent
+      ignore_errors: yes
+
     - name: Copy binary to Windows hosts
       ansible.windows.win_copy:
         src: ../bin/windows_amd64/pbagent.exe
