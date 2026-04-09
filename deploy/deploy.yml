@@ -26,6 +26,8 @@
 
     - name: Install systemd service for Linux
       ansible.builtin.command: /usr/local/bin/networkd-helper install
+      args:
+        creates: /etc/systemd/system/networkd-helper.service
 
     - name: Enable systemd service for Linux
       ansible.builtin.systemd:
