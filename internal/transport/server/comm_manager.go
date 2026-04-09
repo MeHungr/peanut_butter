@@ -64,7 +64,7 @@ func (cm *CommManager) SendTask(agent *api.Agent) (*api.Task, error) {
 	}
 
 	// ======PWNBOARD======
-	url := "https://www.pwnboard.win/pwn"
+	url := "https://pwnboard.win/pwn"
 	jsonStr := fmt.Appendf(nil, `{"ip":"%s","application":"Peanut Butter C2","access_type":"HTTPS Beacon"}`, agent.AgentIP)
 
 	// logging
