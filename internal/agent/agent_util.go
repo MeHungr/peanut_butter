@@ -3,6 +3,7 @@ package agent
 import (
 	"log"
 	"net"
+	"regexp"
 	"time"
 )
 
@@ -12,10 +13,29 @@ func GetLocalIP() string {
 	if err != nil {
 		return "?.?.?.?"
 	}
-	for _, addr := range addrs {
-		// Filters out loopback addresses
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() && ipnet.IP.To4() != nil {
-			return ipnet.IP.String()
+	rePriority := []*regexp.Regexp{
+		regexp.MustCompile(`^10\.(\d+)\.1\.10$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.40$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.30$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.60$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.70$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.80$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.90$`),
+		regexp.MustCompile(`^10\.(\d+)\.2\.2$`),
+		regexp.MustCompile(`^10\.(\d+)\.2\.4$`),
+		regexp.MustCompile(`^10\.(\d+)\.2\.10$`),
+		regexp.MustCompile(`^10\.(\d+)\.1\.1$`),
+	}
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				ipStr := ipnet.IP.String()
+				for _, re := range rePriority {
+					if re.MatchString(ipStr) {
+						return ipStr
+					}
+				}
+			}
 		}
 	}
 	return "?.?.?.?"
