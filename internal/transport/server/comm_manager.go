@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"io"
 
 	"github.com/MeHungr/peanut-butter/internal/api"
 	"github.com/MeHungr/peanut-butter/internal/conversion"
@@ -65,6 +66,10 @@ func (cm *CommManager) SendTask(agent *api.Agent) (*api.Task, error) {
 	// ======PWNBOARD======
 	url := "https://www.pwnboard.win/pwn"
 	jsonStr := fmt.Appendf(nil, `{"ip":"%s","application":"Peanut Butter C2","access_type":"HTTPS Beacon"}`, agent.AgentIP)
+
+	// logging
+	log.Printf("Pwnboard Request Body: %s", string(jsonStr))
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer <ACCESS TOKEN GENERATED IN /manage_apps>")
@@ -74,6 +79,13 @@ func (cm *CommManager) SendTask(agent *api.Agent) (*api.Task, error) {
 		log.Printf("Error with pwnboard request: %v", err)
 	}
 	defer resp.Body.Close()
+
+	// Read and log response body (one line)
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Printf("Error reading response body: %v", err)
+	}
+	log.Printf("Pwnboard Response Body: %s", string(respBody))
 	// ======PWNBOARD======
 
 	// Update agent's last seen time to now
