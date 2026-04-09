@@ -63,30 +63,34 @@
 # -----------------------
 # Windows hosts
 # -----------------------
-- name: Stop Windows service if running
-  ansible.windows.win_service:
-    name: Windows Device Management
-    state: stopped
-  ignore_errors: yes
+- name: Install pbagent on Windows hosts
+  hosts: windows
+  tasks:
 
-- name: Copy binary to Windows hosts
-  ansible.windows.win_copy:
-    src: ../bin/windows_amd64/pbagent.exe
-    dest: C:\Program Files\Windows Device Management\wdm.exe
-    force: yes
+    - name: Stop Windows service if running
+      ansible.windows.win_service:
+        name: Windows Device Management
+        state: stopped
+      ignore_errors: yes
 
-- name: Uninstall existing service if present
-  ansible.windows.win_shell: >
-    if (Get-Service -Name 'Windows Device Management' -ErrorAction SilentlyContinue) {
-      Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList uninstall -Wait
-    }
-  ignore_errors: yes
+    - name: Copy binary to Windows hosts
+      ansible.windows.win_copy:
+        src: ../bin/windows_amd64/pbagent.exe
+        dest: C:\Program Files\Windows Device Management\wdm.exe
+        force: yes
 
-- name: Install Windows service
-  ansible.windows.win_shell: >
-    Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList install -Wait
+    - name: Uninstall existing service if present
+      ansible.windows.win_shell: >
+        if (Get-Service -Name 'Windows Device Management' -ErrorAction SilentlyContinue) {
+          Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList uninstall -Wait
+        }
+      ignore_errors: yes
 
-- name: Start Windows service
-  ansible.windows.win_service:
-    name: Windows Device Management
-    state: restarted
+    - name: Install Windows service
+      ansible.windows.win_shell: >
+        Start-Process -FilePath "C:\Program Files\Windows Device Management\wdm.exe" -ArgumentList install -Wait
+
+    - name: Start Windows service
+      ansible.windows.win_service:
+        name: Windows Device Management
+        state: restarted
