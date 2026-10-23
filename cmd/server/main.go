@@ -12,6 +12,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/MeHungr/peanut-butter/internal/server"
 	"github.com/MeHungr/peanut-butter/internal/storage"
@@ -23,8 +24,27 @@ func main() {
 	serverPort := 443
 	// ============================
 
+	// Get server exe location
+	srvExe, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("Failed to obtain server filepath: %v", err)
+	}
+
+	// Get directory of server exe
+	baseDir := filepath.Dir(srvExe)
+
+	// Parse database directory and pb.db filepath
+	dbDir := filepath.Join(baseDir, "database")
+	pbPath := filepath.Join(dbDir, "pb.db")
+	
+	// Create database directory
+	err := os.MkdirAll(path, 0755)
+	if err != nil {
+		log.Fatal(err)
+	}
+	
 	// Initialize the database
-	db, err := storage.NewStorage("./pb.db")
+	db, err := storage.NewStorage(pbPath)
 	if err != nil {
 		log.Fatalf("Failed to initialize storage: %v", err)
 	}
