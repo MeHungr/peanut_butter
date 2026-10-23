@@ -60,6 +60,7 @@ make build-certs
 ``` bash
 make # places binaries in <project root>/bin and installs the cli
 ```
+8. Move generated server.crt and server.key to ./certs/ relative to pbserver binary
 
 ## Usage
 ### Starting the server and agents
