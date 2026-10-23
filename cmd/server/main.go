@@ -27,7 +27,7 @@ func main() {
 	// Get server exe location
 	srvExe, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("Failed to obtain server filepath: %v", err)
+		log.Fatalf("Failed to obtain server filepath: %v", err)
 	}
 
 	// Get directory of server exe
@@ -38,7 +38,7 @@ func main() {
 	pbPath := filepath.Join(dbDir, "pb.db")
 	
 	// Create database directory
-	err := os.MkdirAll(path, 0755)
+	err = os.MkdirAll(dbDir, 0755)
 	if err != nil {
 		log.Fatal(err)
 	}
