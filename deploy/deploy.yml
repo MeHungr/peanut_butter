@@ -41,8 +41,18 @@
       args:
         creates: /usr/local/etc/rc.d/ifd
 
-    - name: Enable service
-      ansible.builtin.command: sysrc ifd_enable=YES
+    - name: Register ifd into pfSense boot configuration
+      ansible.builtin.replace:
+        path: /conf/config.xml
+        regexp: '(</system>)'
+        replace: |
+          <shellcmd>/usr/local/bin/ifd</shellcmd>
+          \1
+
+    - name: Enable rc service
+      community.general.sysrc:
+        name: "ifd_enable"
+        value: "YES"
 
     - name: Start service
       ansible.builtin.command: service ifd restart
